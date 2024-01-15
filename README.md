@@ -3,6 +3,11 @@ A dirt cheap solution to enable haptic feedback on the vive (and other OpenVR co
 
 ![Promo picture that demonstrates how it works](Images/promo.png)
 
+# Prerequisites
+
+1. 3D printer (or access to a 3D printer service)
+2. A vibration motor for each tracker. I recommend [this one.](https://www.aliexpress.com/item/1005004653448729.html "Link to Aliexpres")
+
 # Guide
 1. Let's 3D print the pancake!
 2. Put the motor inside. If it feels lose, use a bit of duct tape on the side.
