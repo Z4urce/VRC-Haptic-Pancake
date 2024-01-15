@@ -1,0 +1,1 @@
+﻿py "C:\Users\zkorosi\Desktop\TrackerHapticFeedback\main.py"
