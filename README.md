@@ -1,4 +1,4 @@
-# VRChat Haptic Pancake (for trackers)
+# VRChat Haptic Pancake (for trackers) [PAGE IS WIP]
 A dirt cheap solution to enable haptic feedback on the vive (and other OpenVR compatible) trackers
 
 ![Promo picture that demonstrates how it works](Images/promo.png)
@@ -9,7 +9,7 @@ A dirt cheap solution to enable haptic feedback on the vive (and other OpenVR co
 2. A vibration motor for each tracker. I recommend [this one.](https://www.aliexpress.com/item/1005004653448729.html "Link to Aliexpres")
 
 # Guide
-1. Let's 3D print the pancake!
+1. Let's 3D print the pancake! You can use any material, but using a TPU will grand an extra dampening effect what can improve your tracking.
 2. Put the motor inside. If it feels lose, use a bit of duct tape on the side.
 
 ![Promo picture that demonstrates how it works](Images/pancake.png)
