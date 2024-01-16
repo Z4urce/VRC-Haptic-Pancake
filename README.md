@@ -1,5 +1,5 @@
 # VRChat Haptic Pancake (for trackers)
-A dirt cheap solution to enable haptic feedback on the vive (and other OpenVR compatible) trackers
+A dirt cheap solution to enable haptic feedback on the vive (and other OpenVR compatible) trackers in VRChat (Or other OSC compatible VR games)
 
 ![Promo picture that demonstrates how it works](Images/promo.png)
 
@@ -46,6 +46,12 @@ A dirt cheap solution to enable haptic feedback on the vive (and other OpenVR co
 - Per tracker intensity setting
 - Haptic Feedback cooldown and trigger patterns
 - Support for DIY haptic devices through serial connection
+
+# Frequently Asked Questions
+- Will this affect my tracking?
+   - Continous vibration will drift tracking, but it will readjust itself as soon as the vibration stops. A solution for this is to vibrate the trackers in patterns instead of constantly. This solution will be implemented in the next release.
+- Can I put the tracker elsewhere after setting up my avatar?
+   - None of the trackers are permanently linked to any parts of your avatar. In fact you can even hotswap them. Just ensure you are using the right parameters in the bridge app. 
 
 # Special Thanks
 - @BubblegumFoxxo (For helping in the testing and debugging)
