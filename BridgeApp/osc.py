@@ -26,7 +26,7 @@ class VRChatOSCReceiver:
     def run(self):
         if not self.is_alive(): return
         self.dispatcher.map("/avatar/parameters/*", self.event_received)
-        print("[OSC] VRChatOSCReceiver serving on {}".format(self.server.server_address))
+        print(f"[OSC] VRChatOSCReceiver serving on {self.server.server_address}")
         self.server.serve_forever()
 
     def is_alive(self):
@@ -37,7 +37,7 @@ class VRChatOSCReceiver:
             address = (self.config.osc_address, int(self.config.osc_receiver_port))
             self.server = osc_server.OSCUDPServer(address, self.dispatcher)
         except:
-            print(f"[ERROR][OSC] Port: {self.config.osc_receiver_port} occupied. ")
+            print(f"[OSC][ERROR] Port: {self.config.osc_receiver_port} occupied.")
             return
 
         self.thread = threading.Thread(target=self.run)

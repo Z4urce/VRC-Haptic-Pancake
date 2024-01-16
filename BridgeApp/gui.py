@@ -1,14 +1,17 @@
 import PySimpleGUI as sg
+import webbrowser
 
 import config
 from config import AppConfig
 
-WINDOW_NAME = "Haptic Feedback Bridge v0.1.0"
+WINDOW_NAME = "Haptic Pancake Bridge v0.1.0"
 
 KEY_REC_IP = '-RECIP-'
 KEY_REC_PORT = '-RECPORT-'
 KEY_BTN_APPLY = '-BTNAPPLY-'
 KEY_VIB_STR = '-VIBSTR-'
+KEY_OPEN_URL = '-OPENURL'
+
 
 class GUIRenderer:
     def __init__(self, config: AppConfig, tracker_test_event, restart_osc_event):
@@ -25,22 +28,29 @@ class GUIRenderer:
              sg.Button("Apply", key=KEY_BTN_APPLY)],
             [sg.Text('Haptic settings:', font='_ 14')],
             [sg.Text("Vibration Intensity:"),
-             sg.Slider(range=(1, 1000), size=(25, 10), default_value=self.config.vibration_intensity,
-                       orientation='horizontal', key=KEY_VIB_STR)],
+             sg.Slider(range=(1, 100), size=(25, 10), default_value=self.config.global_vibration_intensity,
+                       orientation='horizontal', key=KEY_VIB_STR, enable_events=True)],
             [sg.Text('Trackers found:', font='_ 14')]
         ]
 
     def add_tracker(self, tracker_id, tracker_serial, tracker_model):
         self.trackers.append(tracker_serial)
         string = f"{tracker_serial} {tracker_model}"
-        print(f"Adding tracker: {string}")
+        print(f"[GUI] Adding tracker: {string}")
+        default_text = self.config.tracker_to_osc[tracker_serial]\
+            if tracker_serial in self.config.tracker_to_osc else '/avatar/parameters/...'
         self.layout.append(
-            [sg.Text(string), sg.InputText('/avatar/parameters/...', key=f"ADDRESS_OF={tracker_serial}"),
+            [sg.Text(string),
+             sg.InputText(default_text, key=f"ADDRESS_OF={tracker_serial}", enable_events=True),
              sg.Button("Test", key=f"TEST_ID={tracker_id}")])
 
     def add_message(self, message):
-        self.layout.append([sg.Text('_' * 50)])
+        self.layout.append([sg.HSep()])
         self.layout.append([sg.Text(message, text_color='red')])
+
+    def add_footer(self):
+        self.layout.append([sg.HSep()])
+        self.layout.append([sg.Text("Made by Z4urce", enable_events=True, font='Default 8 underline', key=KEY_OPEN_URL)])
 
     def show_error_window(self, error_message):
         sg.popup_ok(error_message)
@@ -56,12 +66,14 @@ class GUIRenderer:
 
         # React to Event
         if event == sg.WIN_CLOSED or event == 'Exit':  # if user closes window or clicks cancel
-            print("Closing application.")
+            print("[GUI] Closing application.")
             return False
         if event.startswith("TEST_ID="):
             self.tracker_test_event(int(event.split("=")[1]))
         if event == KEY_BTN_APPLY:
             self.restart_osc_event()
+        if event == KEY_OPEN_URL:
+            webbrowser.open("https://github.com/Z4urce/VRC-Haptic-Pancake")
 
         return True
 
@@ -72,12 +84,11 @@ class GUIRenderer:
         # Update Tracker OSC Addresses
         for tracker in self.trackers:
             self.config.tracker_to_osc[tracker] = values[f"ADDRESS_OF={tracker}"]
-            print(f"Tracker {tracker} has been set to {self.config.tracker_to_osc[tracker]}")
 
         # Update OSC Addresses
         self.config.osc_address = values[KEY_REC_IP]
         self.config.osc_receiver_port = int(values[KEY_REC_PORT])
 
         # Update vibration intensity
-        self.config.vibration_intensity = int(values[KEY_VIB_STR]) if KEY_VIB_STR in values else 0
-        print(f"Vibration has been set to {self.config.vibration_intensity}")
+        self.config.global_vibration_intensity = int(values[KEY_VIB_STR]) if KEY_VIB_STR in values else 0
+        self.config.save()

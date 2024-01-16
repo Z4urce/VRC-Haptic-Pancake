@@ -23,17 +23,23 @@ class AppConfig(BaseModel):
     osc_port: int = 9000
     osc_receiver_port: int = 9001
     tracker_to_osc: Dict[str, str] = {}
-    vibration_intensity: int = 400
+    global_vibration_intensity: int = 100
+    global_vibration_cooldown: int = 100
 
     @staticmethod
     def load():
         # return AppConfig()
         if not os.path.exists(CONFIG_FILE_NAME):
+            print("[Config] File not found. Loading default config...")
             return AppConfig()
         with open(CONFIG_FILE_NAME, "r") as settings_file:
-            return AppConfig(**json.load(settings_file))
+            print(f"[Config] Opened {os.path.abspath(CONFIG_FILE_NAME)}")
+            try:
+                return AppConfig(**json.load(settings_file))
+            except json.JSONDecodeError:
+                print(f"[Config][ERROR] Corrupted file. Loading default config...")
+                return AppConfig()
 
     def save(self):
-        # print("Emulating save...")
         with open(CONFIG_FILE_NAME, "w+") as settings_file:
             json.dump(self.model_dump(), fp=settings_file)
