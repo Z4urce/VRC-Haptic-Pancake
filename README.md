@@ -1,4 +1,4 @@
-# VRChat Haptic Pancake (for trackers) [PAGE IS WIP]
+# VRChat Haptic Pancake (for trackers)
 A dirt cheap solution to enable haptic feedback on the vive (and other OpenVR compatible) trackers
 
 ![Promo picture that demonstrates how it works](Images/promo.png)
