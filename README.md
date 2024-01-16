@@ -3,6 +3,12 @@ A dirt cheap solution to enable haptic feedback on the vive (and other OpenVR co
 
 ![Promo picture that demonstrates how it works](Images/promo.png)
 
+## Contact
+
+Please join our Discord for updates and any questions.
+
+[![Discord](https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/gd4dsbdX)
+
 # Prerequisites
 
 1. Access to a 3D printer (or a 3D printer service)
