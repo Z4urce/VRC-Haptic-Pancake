@@ -22,8 +22,8 @@ A dirt cheap solution to enable haptic feedback on the vive (and other OpenVR co
 
 ![Promo picture that demonstrates how it works](Images/sandwitch.png)
 
-5. Prepare your avatar by adding VRC Contact Receiver component to each bone you wear your tracker on.  
-    * Ensure that it has been positioned properly and only the "Allow Others" is enabled in the Filtering settings.
+5. Prepare your avatar by adding a VRC Contact Receiver component to each bone you wear your tracker on.  
+    * Ensure that it has been positioned properly and only "Allow Others" is enabled in the Filtering settings.
     * Feel free to define which collision tags will trigger your haptics by adding the specific collision tags.
     * Set the Receiver Type to Proximity (This is the only supported type for now in the bridge app)
     * Come up with a good unique name for the parameter. For example 'LeftFootTouched' if you want to trigger the haptics in the tracker on your left foot. The name itself can be whatever and it does not really matter as long as you get it right everywhere.
@@ -35,14 +35,14 @@ A dirt cheap solution to enable haptic feedback on the vive (and other OpenVR co
 ![Promo picture that demonstrates how it works](Images/params.png)
 
 8. Upload your avatar
-9. If you are updating an existing avatar, be sure to clear your `AppData\LocalLow\VRChat\VRChat\OSC\` directory. Or else VRChat won't recognise the new parameter.
+9. If you are updating an existing avatar, be sure to clear your `AppData\LocalLow\VRChat\VRChat\OSC\` directory or else VRChat won't recognise the new parameter.
 
 ![Promo picture that demonstrates how it works](Images/bridgeapp.png)
 
 10. Run the bridge app, match the trackers with the declared parameters. You can press the 'Test' button to send them a short vibration. Note that the app requires SteamVR running in the background.
 11. Enjoy and have fun!
 
-# Feature Plan
+# Planned Features
 - Per tracker intensity setting
 - Haptic Feedback cooldown and trigger patterns
 - Support for DIY haptic devices through serial connection
