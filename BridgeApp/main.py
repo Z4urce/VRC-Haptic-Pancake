@@ -40,8 +40,8 @@ def main():
         gui.add_tracker(device.index, device.serial, device.model)
     print("[Main] Trackers added")
 
-    # Debug tracker
-    gui.add_tracker(99, "T35T-53R1AL", "Test Model 1.0")
+    # Debug tracker (Uncomment this for debug purposes)
+    # gui.add_tracker(99, "T35T-53R1AL", "Test Model 1.0")
 
     # Report errors to GUI is any exists
     if not osc_receiver.is_alive():

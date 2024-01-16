@@ -2,3 +2,5 @@
 __pycache__/
 [Ii]gnored*/
 config.json
+[Bb]uild/
+[Ddist]/
