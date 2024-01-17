@@ -16,11 +16,13 @@ class OpenVRTracker:
         self.vr = openvr.init(openvr.VRApplication_Background)
         self.devices: [VRTracker] = []
 
-        poses = self.vr.getDeviceToAbsoluteTrackingPose(openvr.TrackingUniverseStanding, 0,
-                                                        openvr.k_unMaxTrackedDeviceCount)
+    def query_devices(self):
+        poses = self.vr.getDeviceToAbsoluteTrackingPose(openvr.TrackingUniverseStanding, 0, openvr.k_unMaxTrackedDeviceCount)
+        self.devices.clear()
         for i in range(openvr.k_unMaxTrackedDeviceCount):
             if poses[i].bPoseIsValid and self.vr.getTrackedDeviceClass(i) == openvr.TrackedDeviceClass_GenericTracker:
                 self.devices.append(VRTracker(i, self.get_model(i), self.get_serial(i)))
+        return self.devices
 
     def get_serial(self, index):
         return self.vr.getStringTrackedDeviceProperty(index, openvr.Prop_SerialNumber_String)
@@ -40,7 +42,3 @@ class OpenVRTracker:
 
     def is_alive(self):
         return self.vr is not None
-
-    def shutdown(self):
-        if self.is_alive():
-            self.vr.shutdown()
