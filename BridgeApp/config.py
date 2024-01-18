@@ -25,6 +25,7 @@ class AppConfig(BaseModel):
     tracker_to_osc: Dict[str, str] = {}
     global_vibration_intensity: int = 100
     global_vibration_cooldown: int = 100
+    global_vibration_pattern: str = "None"
 
     @staticmethod
     def load():
