@@ -13,11 +13,11 @@ class VibrationPattern:
     def apply_pattern(self, value):
         pattern = self.config.global_vibration_pattern
         if pattern == self.VIB_PATTERN_LIST[1]:
-            return self.get_sine_value(1) * value
-        if pattern == self.VIB_PATTERN_LIST[2]:
-            return self.get_sine_value(2) * value
-        if pattern == self.VIB_PATTERN_LIST[3]:
             return self.get_sine_value(4) * value
+        if pattern == self.VIB_PATTERN_LIST[2]:
+            return self.get_sine_value(8) * value
+        if pattern == self.VIB_PATTERN_LIST[3]:
+            return self.get_sine_value(16) * value
         return value
 
     @staticmethod
