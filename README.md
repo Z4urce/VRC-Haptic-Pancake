@@ -36,7 +36,7 @@ Please join our Discord for updates and any questions.
 
 ![Promo picture that demonstrates how it works](Images/unity.png)
 
-6. Add the parameters you've assigned to the Contact Receivers in the previous step to your Avatar's parameters.
+6. Add the parameters you've assigned to the Contact Receivers in the previous step to your Avatar's parameters. It should be a Float with 0 as default value. Do not check the Saved and Synced checkmarks!
 
 ![Promo picture that demonstrates how it works](Images/params.png)
 
