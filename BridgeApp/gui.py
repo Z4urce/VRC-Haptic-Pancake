@@ -4,7 +4,7 @@ import webbrowser
 from config import AppConfig
 from pattern import VibrationPattern
 
-WINDOW_NAME = "Haptic Pancake Bridge v0.2.0"
+WINDOW_NAME = "Haptic Pancake Bridge v0.2.1"
 
 KEY_REC_IP = '-REC-IP-'
 KEY_REC_PORT = '-REC-PORT-'
