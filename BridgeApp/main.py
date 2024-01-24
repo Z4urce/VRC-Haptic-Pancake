@@ -1,5 +1,6 @@
 import traceback
 import platform
+from pattern import VibrationPattern
 from osc import VRChatOSCReceiver
 from config import AppConfig
 from tracker import OpenVRTracker
@@ -8,6 +9,8 @@ from gui import GUIRenderer
 vr: OpenVRTracker = None
 osc_receiver: VRChatOSCReceiver = None
 config: AppConfig = None
+gui: GUIRenderer = None
+vp: VibrationPattern = None
 
 
 def main():
@@ -19,37 +22,26 @@ def main():
     config.save()
     print("[Main] Config loaded")
 
+    # Init GUI
+    global gui
+    gui = GUIRenderer(config, pulse_test, restart_osc_server, refresh_tracker_list)
+    print("[Main] GUI initialized")
+
+    global vp
+    vp = VibrationPattern(config)
+
     # Start the OSC receiver thread
     global osc_receiver
-    osc_receiver = VRChatOSCReceiver(config, param_received)
+    osc_receiver = VRChatOSCReceiver(config, param_received, gui.update_osc_status_bar)
     osc_receiver.start_server()
     print("[Main] OSC receiver started")
-
-    # Init GUI
-    gui = GUIRenderer(config, pulse_test, restart_osc_server)
-    print("[Main] GUI initialized")
 
     # Init OpenVR
     global vr
     vr = OpenVRTracker()
 
-    print("[Main] OpenVR initialized" if vr.is_alive() else "[Main] OpenVR is not alive")
-
     # Add trackers to GUI
-    for device in vr.devices:
-        gui.add_tracker(device.index, device.serial, device.model)
-    print("[Main] Trackers added")
-
-    # Debug tracker (Uncomment this for debug purposes)
-    # gui.add_tracker(99, "T35T-53R1AL", "Test Model 1.0")
-
-    # Report errors to GUI is any exists
-    if not osc_receiver.is_alive():
-        gui.add_message("Error: Could not start OSC receiver. The selected port may be occupied.")
-    if not vr.is_alive():
-        gui.add_message("Error: Could not connect to Steam VR. Please restart the app.")
-    elif len(vr.devices) == 0:
-        gui.add_message("Warning: No active trackers has been detected. Please restart the app.")
+    refresh_tracker_list()
 
     # Add footer
     gui.add_footer()
@@ -59,8 +51,9 @@ def main():
 
 
 # Adapter functions
-def pulse_test(id):
-    vr.pulse(id, 200)
+def pulse_test(tracker_id):
+    print(f"[Main] Pulse test for {tracker_id} executed.")
+    vr.pulse(tracker_id, 200)
 
 
 def restart_osc_server():
@@ -68,12 +61,25 @@ def restart_osc_server():
         osc_receiver.restart_server()
 
 
+def refresh_tracker_list():
+    if vr is None or gui is None:
+        return
+
+    for device in vr.query_devices():
+        gui.add_tracker(device.index, device.serial, device.model)
+
+    # Debug tracker (Uncomment this for debug purposes)
+    # gui.add_tracker(99, "T35T-53R1AL", "Test Model 1.0")
+    print("[Main] Tracker list refreshed")
+
+
 def param_received(address, value):
     # address is the OSC address
     # value is the floating value (0..1) that determines how intense the feedback should be
+    pulse_length: int = int(vp.apply_pattern(value * config.global_vibration_intensity))
     for key in config.tracker_to_osc.keys():
         if config.tracker_to_osc[key] == address:
-            vr.pulse_by_serial(key, int(value * config.global_vibration_intensity))
+            vr.pulse_by_serial(key, pulse_length)
 
 
 if __name__ == '__main__':
@@ -85,5 +91,4 @@ if __name__ == '__main__':
     finally:
         # Shut down the processes
         print("[Main] Halting...")
-        if vr is not None: vr.shutdown()
         if osc_receiver is not None: osc_receiver.shutdown()

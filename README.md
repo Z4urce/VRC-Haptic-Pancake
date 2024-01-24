@@ -43,7 +43,7 @@ Please join our Discord for updates and any questions.
    ![Setup instructions, where the appropriate configuration for a Contact Receiver can be seen in the Unity Editor](Images/unity.png)
 
 5. Add Parameters to Avatar:
-   * Add the assigned parameters from the previous step to your avatar's parameters.
+   * Add the assigned parameters from the previous step to your avatar's parameters. They should be set to Float, default value `0`, and `Saved` and `Sync` should be disabled.
 
    ![Setup instructions, where the appropriate Avatar Parameters can be seen in the Unity Editor](Images/params.png)
 
