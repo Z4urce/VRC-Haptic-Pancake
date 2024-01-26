@@ -18,11 +18,11 @@ class VibrationPattern:
             case 0:
                 return value
             case 1:  # LinearSlow
-                return self.get_linear_value(8) * value
+                return self.get_linear_value(1) * value
             case 2:  # Linear
-                return self.get_linear_value(16) * value
+                return self.get_linear_value(2) * value
             case 3:  # LinearFast
-                return self.get_linear_value(32) * value
+                return self.get_linear_value(4) * value
             case 4:  # SineSlow
                 return self.get_sine_value(8) * value
             case 5:  # Sine
