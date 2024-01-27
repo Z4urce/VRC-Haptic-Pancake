@@ -53,7 +53,7 @@ def main():
 # Adapter functions
 def pulse_test(tracker_id):
     print(f"[Main] Pulse test for {tracker_id} executed.")
-    vr.pulse(tracker_id, 200)
+    vr.pulse(tracker_id, 500)
 
 
 def restart_osc_server():
@@ -73,13 +73,19 @@ def refresh_tracker_list():
     print("[Main] Tracker list refreshed")
 
 
-def param_received(address, value):
+def param_received(osc_address, osc_value):
     # address is the OSC address
     # value is the floating value (0..1) that determines how intense the feedback should be
-    pulse_length: int = int(vp.apply_pattern(value * config.global_vibration_intensity))
-    for key in config.tracker_to_osc.keys():
-        if config.tracker_to_osc[key] == address:
-            vr.pulse_by_serial(key, pulse_length)
+    for tracker_serial in config.tracker_to_osc.keys():
+        if config.tracker_to_osc[tracker_serial] == osc_address:
+            pulse_length = vp.apply_pattern(tracker_serial, osc_value)
+
+            # Apply the custom multiplier
+            pulse_length *= config.tracker_to_vib_int_override[tracker_serial]\
+                if tracker_serial in config.tracker_to_vib_int_override else 1.0
+
+            result = int(pulse_length)
+            vr.pulse_by_serial(tracker_serial, result)
 
 
 if __name__ == '__main__':

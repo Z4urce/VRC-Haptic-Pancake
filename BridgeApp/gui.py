@@ -4,7 +4,7 @@ import webbrowser
 from config import AppConfig
 from pattern import VibrationPattern
 
-WINDOW_NAME = "Haptic Pancake Bridge v0.2.1"
+WINDOW_NAME = "Haptic Pancake Bridge v0.3.1b"
 
 KEY_REC_IP = '-REC-IP-'
 KEY_REC_PORT = '-REC-PORT-'
@@ -16,9 +16,8 @@ KEY_OPEN_URL = '-OPENURL'
 KEY_OSC_STATUS_BAR = '-OSC-STATUS-BAR-'
 KEY_LAYOUT_TRACKERS = '-LAYOUT-TRACKERS-'
 KEY_OSC_ADDRESS = '-ADDRESS-OF-'
+KEY_VIB_STR_OVERRIDE = '-VIB-STR-'
 KEY_BTN_TEST = '-BTN-TEST'
-
-
 
 
 class GUIRenderer:
@@ -63,14 +62,22 @@ class GUIRenderer:
 
     def tracker_row(self, tracker_id, tracker_serial, tracker_model):
         string = f"⚫ {tracker_serial} {tracker_model}"
-        default_text = self.config.tracker_to_osc[tracker_serial] \
+
+        default_osc_address = self.config.tracker_to_osc[tracker_serial] \
             if tracker_serial in self.config.tracker_to_osc else "/avatar/parameters/..."
+        default_vib_int_override = self.config.tracker_to_vib_int_override[tracker_serial] \
+            if tracker_serial in self.config.tracker_to_vib_int_override else 1.0
+
         print(f"[GUI] Adding tracker: {string}")
         layout = [[sg.Text(string, pad=(0, 0))],
                   [sg.Text(" "), sg.Text("OSC Address:"),
-                   sg.InputText(default_text, k=(KEY_OSC_ADDRESS, tracker_serial), enable_events=True, size=32,
+                   sg.InputText(default_osc_address, k=(KEY_OSC_ADDRESS, tracker_serial), enable_events=True, size=32,
                                 tooltip="OSC Address"),
-                   sg.Button("Test", k=(KEY_BTN_TEST, tracker_id), tooltip="Send a 200ms pulse to the tracker")]]
+                   sg.Button("Test", k=(KEY_BTN_TEST, tracker_id), tooltip="Send a 500ms pulse to the tracker")],
+                  [sg.Text(" "), sg.Text("Intensity multiplier:"),
+                   sg.InputText(default_vib_int_override, k=(KEY_VIB_STR_OVERRIDE, tracker_serial), enable_events=True,
+                                size=32,
+                                tooltip="The haptic intensity for this tracker will be multiplied by this number")]]
 
         row = [sg.pin(sg.Col(layout, key=('-ROW-', tracker_id)))]
         return row
@@ -141,6 +148,15 @@ class GUIRenderer:
             key = (KEY_OSC_ADDRESS, tracker)
             if key in values:
                 self.config.tracker_to_osc[tracker] = values[key]
+
+        # Update Tracker vibration
+        for tracker in self.trackers:
+            key = (KEY_VIB_STR_OVERRIDE, tracker)
+            if key in values:
+                try:
+                    self.config.tracker_to_vib_int_override[tracker] = float(values[key])
+                except ValueError:
+                    pass  # Ignore the error for now
 
         # Update OSC Addresses
         self.config.osc_address = values[KEY_REC_IP]

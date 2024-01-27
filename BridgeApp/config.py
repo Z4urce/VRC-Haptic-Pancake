@@ -6,7 +6,7 @@ from typing import Dict
 CONFIG_FILE_NAME: str = "config.json"
 
 
-class VRTracker:
+class VRTracker:    # Work in progress
     index: int
     model: str
     serial: str
@@ -17,12 +17,21 @@ class VRTracker:
         self.serial = serial
 
 
+class TrackerVO(BaseModel):
+    serial: str
+    osc_address: str
+    vibration_multiplier: float
+    pattern_override: str
+
+
 class AppConfig(BaseModel):
     version: int = 1
     osc_address: str = "127.0.0.1"
     osc_port: int = 9000
     osc_receiver_port: int = 9001
-    tracker_to_osc: Dict[str, str] = {}
+    tracker_to_osc: Dict[str, str] = {}                 # TODO Remove in favor of tracker_dict
+    tracker_to_vib_int_override: Dict[str, float] = {}  # TODO Remove in favor of tracker_dict
+    #tracker_dict: Dict[str, VRTracker] = {}
     global_vibration_intensity: int = 100
     global_vibration_cooldown: int = 100
     global_vibration_pattern: str = "None"
