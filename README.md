@@ -7,7 +7,7 @@ A dirt cheap solution to enable haptic feedback on the vive (and other OpenVR co
 
 Curious about the development? Have any questions? Join the discord!
 
-[![Discord](https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/gd4dsbdX)
+[![Discord](https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/DEWbQHqbRS)
 
 # How to make
 [> Check out the Wiki for a full guide! <](https://github.com/Z4urce/VRC-Haptic-Pancake/wiki)
