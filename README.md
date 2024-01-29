@@ -1,7 +1,7 @@
 # VRChat Haptic Pancake (for trackers)
 A dirt cheap solution to enable haptic feedback on the vive (and other OpenVR compatible) trackers in VRChat (Or other OSC compatible VR games)
 
-![Promo picture that demonstrates how it works](Images/promo.png)
+[<img src="Images/promo.png">](https://youtu.be/c1JQpJwJ7_c)
 
 # Contact
 
