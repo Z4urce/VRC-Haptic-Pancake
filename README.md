@@ -16,6 +16,8 @@ Curious about the development? Have any questions? Join the discord!
 - Support for DIY haptic devices through serial connection
 
 # Frequently Asked Questions
+- Will this harm my tracker in any way?
+   - The tracking capabilities of your tracker should not get harmed at all. In case of an unexpected high load the output pin of your tracker might get fried out. That only means that in the worst case scenario you won't be able to use a vibration function on that particular tracker anymore. However after two weeks of intensive testing on my own trackers I experienced no problems whatsoever. I'll update this page if anything changes.
 - Will this affect my tracking?
    - Since I implemented the vibration pattern system, it barely affects the tracking. But it still depends on the selected pattern. For example You should experience minor to no drifting with the 'Linear' one.
 - Can I put the tracker elsewhere after setting up my avatar?
