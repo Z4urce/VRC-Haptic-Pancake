@@ -1,16 +1,16 @@
+from app_pattern import VibrationPattern
+from app_config import AppConfig
+from app_gui import GUIRenderer
+from server_osc import VRChatOSCReceiver
+from target_ovr import OpenVRTracker
 import traceback
 import platform
-from pattern import VibrationPattern
-from osc import VRChatOSCReceiver
-from config import AppConfig
-from tracker import OpenVRTracker
-from gui import GUIRenderer
 
-vr: OpenVRTracker = None
 osc_receiver: VRChatOSCReceiver = None
+vp: VibrationPattern = None
+vr: OpenVRTracker = None
 config: AppConfig = None
 gui: GUIRenderer = None
-vp: VibrationPattern = None
 
 
 def main():
@@ -22,13 +22,14 @@ def main():
     config.save()
     print("[Main] Config loaded")
 
+    # Init vibration pattern config
+    global vp
+    vp = VibrationPattern(config)
+
     # Init GUI
     global gui
     gui = GUIRenderer(config, pulse_test, restart_osc_server, refresh_tracker_list)
     print("[Main] GUI initialized")
-
-    global vp
-    vp = VibrationPattern(config)
 
     # Start the OSC receiver thread
     global osc_receiver
@@ -47,13 +48,15 @@ def main():
     gui.add_footer()
 
     # Main GUI loop here
-    while gui.run(): pass
+    while gui.run():
+        pass
 
 
 # Adapter functions
 def pulse_test(tracker_id):
     print(f"[Main] Pulse test for {tracker_id} executed.")
     vr.pulse(tracker_id, 500)
+    # param_received("TEST", 1.0)
 
 
 def restart_osc_server():
@@ -85,6 +88,7 @@ def param_received(osc_address, osc_value):
                 if tracker_serial in config.tracker_to_vib_int_override else 1.0
 
             result = int(pulse_length)
+            # print(f"Vibrating {osc_address} for {result} ms")
             vr.pulse_by_serial(tracker_serial, result)
 
 

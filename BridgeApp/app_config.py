@@ -1,12 +1,12 @@
 import os.path
 import json
 from pydantic import BaseModel
-from typing import Dict
+from typing import Dict, List, Any
 
 CONFIG_FILE_NAME: str = "config.json"
 
 
-class VRTracker:    # Work in progress
+class VRTracker:  # Work in progress
     index: int
     model: str
     serial: str
@@ -24,17 +24,30 @@ class TrackerVO(BaseModel):
     pattern_override: str
 
 
+class PatternConfig(BaseModel):
+    pattern: str = "Linear"
+    intensity: int = 1
+    speed: int = 1
+
+    def __init__(self, pattern: str, intensity: int, speed: int, **data: Any):
+        super().__init__(**data)
+        self.pattern = pattern
+        self.intensity = int(intensity)
+        self.speed = int(speed)
+
+
 class AppConfig(BaseModel):
     version: int = 1
     osc_address: str = "127.0.0.1"
-    osc_port: int = 9000
+    # osc_port: int = 9000
     osc_receiver_port: int = 9001
-    tracker_to_osc: Dict[str, str] = {}                 # TODO Remove in favor of tracker_dict
+    tracker_to_osc: Dict[str, str] = {}  # TODO Remove in favor of tracker_dict
     tracker_to_vib_int_override: Dict[str, float] = {}  # TODO Remove in favor of tracker_dict
-    #tracker_dict: Dict[str, VRTracker] = {}
-    global_vibration_intensity: int = 100
-    global_vibration_cooldown: int = 100
-    global_vibration_pattern: str = "None"
+    pattern_config_list: List[PatternConfig] = []
+    # tracker_dict: Dict[str, VRTracker] = {}
+    # global_vibration_intensity: int = 100
+    # global_vibration_cooldown: int = 100
+    # global_vibration_pattern: str = "None"
 
     @staticmethod
     def load():

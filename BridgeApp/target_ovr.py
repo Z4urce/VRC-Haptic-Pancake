@@ -1,5 +1,5 @@
 import openvr
-from config import VRTracker
+from app_config import VRTracker
 
 
 class OpenVRTracker:

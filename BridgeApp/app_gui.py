@@ -1,23 +1,29 @@
 import PySimpleGUI as sg
 import webbrowser
 
-from config import AppConfig
-from pattern import VibrationPattern
+from app_config import AppConfig, PatternConfig
+from app_pattern import VibrationPattern
 
-WINDOW_NAME = "Haptic Pancake Bridge v0.3.1b"
+WINDOW_NAME = "Haptic Pancake Bridge v0.4.0b"
 
 KEY_REC_IP = '-REC-IP-'
 KEY_REC_PORT = '-REC-PORT-'
 KEY_BTN_APPLY = '-BTN-APPLY-'
 KEY_BTN_REFRESH = '-BTN-REFRESH'
-KEY_VIB_STR = '-VIB-STR-'
-KEY_VIB_PATTERN = '-VIB-PATTERN-'
 KEY_OPEN_URL = '-OPENURL'
 KEY_OSC_STATUS_BAR = '-OSC-STATUS-BAR-'
 KEY_LAYOUT_TRACKERS = '-LAYOUT-TRACKERS-'
 KEY_OSC_ADDRESS = '-ADDRESS-OF-'
 KEY_VIB_STR_OVERRIDE = '-VIB-STR-'
 KEY_BTN_TEST = '-BTN-TEST'
+
+# Pattern Config
+KEY_PROXIMITY = '-PROXY-'
+KEY_VELOCITY = '-VELOCITY-'
+# Pattern Settings
+KEY_VIB_INTENSITY = '-VIB-INT-'
+KEY_VIB_PATTERN = '-VIB-PTN-'
+KEY_VIB_SPEED = '-VIB-SPD-'
 
 
 class GUIRenderer:
@@ -35,6 +41,15 @@ class GUIRenderer:
         self.build_layout()
 
     def build_layout(self):
+        proximity_frame = sg.Frame('Proximity Feedback', tooltip="Closer object means stronger vibration.",
+                                   layout=self.build_pattern_setting_layout(
+                                       KEY_PROXIMITY, VibrationPattern.VIB_PATTERN_LIST,
+                                       self.config.pattern_config_list[VibrationPattern.PROXIMITY]))
+        velocity_frame = sg.Frame('Velocity Feedback', tooltip="Faster object means stronger vibration",
+                                  layout=self.build_pattern_setting_layout(
+                                      KEY_VELOCITY, VibrationPattern.VIB_PATTERN_LIST,
+                                      self.config.pattern_config_list[VibrationPattern.VELOCITY]))
+
         self.layout = [
             [sg.Text('OSC Listener settings:', font='_ 14')],
             [sg.Text("Address:"),
@@ -45,15 +60,24 @@ class GUIRenderer:
             [sg.Text("Server status:"), self.osc_status_bar],
             [self.small_vertical_space()],
             [sg.Text('Haptic settings:', font='_ 14')],
-            [sg.Text("Vibration Intensity:"),
-             sg.Slider(range=(1, 100), size=(31, 10), default_value=self.config.global_vibration_intensity,
-                       orientation='horizontal', key=KEY_VIB_STR, enable_events=True)],
-            [sg.Text("Vibration Pattern:", size=14),
-             sg.Drop(VibrationPattern.VIB_PATTERN_LIST, self.config.global_vibration_pattern,
-                     k=KEY_VIB_PATTERN, size=37, readonly=True, enable_events=True)],
+            [proximity_frame, velocity_frame],
             [self.small_vertical_space()],
             [sg.Text('Trackers found:', font='_ 14')],
             [self.tracker_frame],
+        ]
+
+    @staticmethod
+    def build_pattern_setting_layout(key: str, pattern_list: [str], pattern_config: PatternConfig):
+        return [
+            [sg.Text("Pattern:"),
+             sg.Drop(pattern_list, pattern_config.pattern,
+                     k=key + KEY_VIB_PATTERN, size=14, readonly=True, enable_events=True)],
+            [sg.Text("Intensity:", size=7),
+             sg.Slider(range=(1, 100), size=(12, 10), default_value=pattern_config.intensity,
+                       orientation='horizontal', key=key + KEY_VIB_INTENSITY, enable_events=True)],
+            [sg.Text("Speed:", size=7),
+             sg.Slider(range=(1, 64), size=(12, 10), default_value=pattern_config.speed,
+                       orientation='horizontal', key=key + KEY_VIB_SPEED, enable_events=True)],
         ]
 
     @staticmethod
@@ -140,7 +164,7 @@ class GUIRenderer:
 
     def update_values(self, values):
         # print(f"Values: {values}")
-        if values is None or values[KEY_VIB_STR] is None:
+        if values is None:
             return
 
         # Update Tracker OSC Addresses
@@ -163,6 +187,11 @@ class GUIRenderer:
         self.config.osc_receiver_port = int(values[KEY_REC_PORT])
 
         # Update vibration intensity and pattern
-        self.config.global_vibration_intensity = int(values[KEY_VIB_STR]) if KEY_VIB_STR in values else 0
-        self.config.global_vibration_pattern = values[KEY_VIB_PATTERN]
+        self.update_pattern_config(values, VibrationPattern.PROXIMITY, KEY_PROXIMITY)
+        self.update_pattern_config(values, VibrationPattern.VELOCITY, KEY_VELOCITY)
         self.config.save()
+
+    def update_pattern_config(self, values, index: int, key: str):
+        self.config.pattern_config_list[index].pattern = values[key + KEY_VIB_PATTERN]
+        self.config.pattern_config_list[index].intensity = int(values[key + KEY_VIB_INTENSITY])
+        self.config.pattern_config_list[index].speed = int(values[key + KEY_VIB_SPEED])

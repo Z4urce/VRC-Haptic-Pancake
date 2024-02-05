@@ -1,6 +1,6 @@
 from pythonosc.dispatcher import Dispatcher
 from pythonosc import osc_server
-from config import AppConfig
+from app_config import AppConfig
 import threading
 
 
@@ -22,8 +22,11 @@ class VRChatOSCReceiver:
             self.print_status("Shutdown completed.")
 
     def event_received(self, address, osc_value):
-        if type(osc_value) != float: return
-        self.param_received_event(address, osc_value)
+        try:
+            float_value = float(osc_value)
+            self.param_received_event(address, float_value)
+        except ValueError:
+            pass
 
     def run(self):
         if not self.is_alive(): return
