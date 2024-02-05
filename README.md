@@ -23,6 +23,9 @@ Curious about the development? Have any questions? Join the discord!
 - Can I put the tracker elsewhere after setting up my avatar?
    - Yes. None of the trackers are permanently linked to any parts of your avatar. In fact you can even hotswap them. Just ensure you are using the right parameters in the bridge app. 
 
+# Support the project
+<a href='https://ko-fi.com/Z4urce' target='_blank'><img height='35' style='border:0px;height:46px;' src='https://az743702.vo.msecnd.net/cdn/kofi3.png?v=0' border='0' alt='Buy Me a Coffee at ko-fi.com' />
+
 # Special Thanks
 - @BubblegumFoxxo (For helping in the testing and debugging)
 - @vulp_vibes (for giving me the idea)
