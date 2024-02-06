@@ -1,6 +1,6 @@
 import math
 import time
-
+import numpy as np
 from app_config import AppConfig, PatternConfig
 
 
@@ -20,9 +20,9 @@ class VibrationPattern:
     def init_pattern_config(self):
         self.config.pattern_config_list.clear()
         # PROXIMITY Defaults: (Linear, 50, 4)
-        self.config.pattern_config_list.append(PatternConfig(self.VIB_PATTERN_LIST[2], 50, 4))
+        self.config.pattern_config_list.append(PatternConfig(self.VIB_PATTERN_LIST[2], 40, 80, 4))
         # VELOCITY Defaults: (None, 80, 32)
-        self.config.pattern_config_list.append(PatternConfig(self.VIB_PATTERN_LIST[0], 80, 32))
+        self.config.pattern_config_list.append(PatternConfig(self.VIB_PATTERN_LIST[0], 40, 80, 32))
 
     def apply_pattern(self, tracker_serial, osc_value):
         delta_time, delta_value = self.__calculate_delta(tracker_serial, osc_value)
@@ -67,9 +67,18 @@ class VibrationPattern:
                 velocity_value = self.__get_sine_value(velocity_settings.speed) * self.__get_velocity_value(
                     osc_value_delta)
 
-        proximity_value *= proximity_settings.intensity
-        velocity_value *= velocity_settings.intensity
+        proximity_value = self.__map(proximity_value, proximity_settings.str_min/100, proximity_settings.str_max/100)
+        velocity_value = self.__map(velocity_value, velocity_settings.str_min/100, velocity_settings.str_max/100)
+
         return max(proximity_value, velocity_value)
+
+    @staticmethod
+    def __map(value, right_min, right_max):
+        if value == 0:
+            return 0
+
+        span = right_max - right_min
+        return right_min + (value * span)
 
     @staticmethod
     def __get_sine_value(speed):

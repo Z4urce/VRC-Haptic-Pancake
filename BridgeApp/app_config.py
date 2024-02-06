@@ -26,13 +26,15 @@ class TrackerVO(BaseModel):
 
 class PatternConfig(BaseModel):
     pattern: str = "Linear"
-    intensity: int = 1
+    str_min: int = 20
+    str_max: int = 80
     speed: int = 1
 
-    def __init__(self, pattern: str, intensity: int, speed: int, **data: Any):
+    def __init__(self, pattern: str, str_min: int, str_max: int, speed: int, **data: Any):
         super().__init__(**data)
         self.pattern = pattern
-        self.intensity = int(intensity)
+        self.str_min = str_min
+        self.str_max = str_max
         self.speed = int(speed)
 
 

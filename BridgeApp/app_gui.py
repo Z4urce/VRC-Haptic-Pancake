@@ -4,7 +4,7 @@ import webbrowser
 from app_config import AppConfig, PatternConfig
 from app_pattern import VibrationPattern
 
-WINDOW_NAME = "Haptic Pancake Bridge v0.4.0b"
+WINDOW_NAME = "Haptic Pancake Bridge v0.5.0b"
 
 KEY_REC_IP = '-REC-IP-'
 KEY_REC_PORT = '-REC-PORT-'
@@ -21,7 +21,8 @@ KEY_BTN_TEST = '-BTN-TEST'
 KEY_PROXIMITY = '-PROXY-'
 KEY_VELOCITY = '-VELOCITY-'
 # Pattern Settings
-KEY_VIB_INTENSITY = '-VIB-INT-'
+KEY_VIB_STR_MIN = '-VIB-STR-MIN-'
+KEY_VIB_STR_MAX = '-VIB-STR-MAX-'
 KEY_VIB_PATTERN = '-VIB-PTN-'
 KEY_VIB_SPEED = '-VIB-SPD-'
 
@@ -51,8 +52,10 @@ class GUIRenderer:
                                       self.config.pattern_config_list[VibrationPattern.VELOCITY]))
 
         self.layout = [
-            [sg.Text('OSC Listener settings:', font='_ 14')],
-            [sg.Text("Address:"),
+            [sg.Text('Bridge settings:', font='_ 14')],
+            [sg.Text("Server Type:"),
+             sg.InputCombo(["OSC (VRChat)", "WebSocket (Resonite)"], "OSC (VRChat)")],
+            [sg.Text("Address:", size=9),
              sg.InputText(self.config.osc_address, k=KEY_REC_IP, size=16, tooltip="IP Address. Default is 127.0.0.1"),
              sg.Text("Port:", tooltip="UDP Port. Default is 9001"),
              sg.InputText(self.config.osc_receiver_port, key=KEY_REC_PORT, size=16),
@@ -71,10 +74,12 @@ class GUIRenderer:
         return [
             [sg.Text("Pattern:"),
              sg.Drop(pattern_list, pattern_config.pattern,
-                     k=key + KEY_VIB_PATTERN, size=14, readonly=True, enable_events=True)],
-            [sg.Text("Intensity:", size=7),
-             sg.Slider(range=(1, 100), size=(12, 10), default_value=pattern_config.intensity,
-                       orientation='horizontal', key=key + KEY_VIB_INTENSITY, enable_events=True)],
+                     k=key + KEY_VIB_PATTERN, size=15, readonly=True, enable_events=True)],
+            [sg.Text("Strength:"),
+             sg.Text("Min:", pad=0),
+             sg.Spin([num for num in range(0, 100)], pattern_config.str_min, pad=0, key=key+KEY_VIB_STR_MIN),
+             sg.Text("Max:", pad=0),
+             sg.Spin([num for num in range(0, 100)], pattern_config.str_max, pad=0, key=key+KEY_VIB_STR_MAX)],
             [sg.Text("Speed:", size=7),
              sg.Slider(range=(1, 64), size=(12, 10), default_value=pattern_config.speed,
                        orientation='horizontal', key=key + KEY_VIB_SPEED, enable_events=True)],
@@ -98,10 +103,17 @@ class GUIRenderer:
                    sg.InputText(default_osc_address, k=(KEY_OSC_ADDRESS, tracker_serial), enable_events=True, size=32,
                                 tooltip="OSC Address"),
                    sg.Button("Test", k=(KEY_BTN_TEST, tracker_id), tooltip="Send a 500ms pulse to the tracker")],
-                  [sg.Text(" "), sg.Text("Intensity multiplier:"),
+                  [sg.Text(" "),
+                   sg.Text("Battery threshold:", tooltip="Disables vibration bellow this battery level"),
+                   sg.Spin([num for num in range(0, 100)], 20, pad=0, key="-TODO-"),
+                   sg.Text("%", pad=0),
+                   sg.VSeparator(),
+                   sg.Text("Pulse multiplier:", tooltip="150 for Tundra\n300 for Vive Wand", pad=0),
                    sg.InputText(default_vib_int_override, k=(KEY_VIB_STR_OVERRIDE, tracker_serial), enable_events=True,
-                                size=32,
-                                tooltip="The haptic intensity for this tracker will be multiplied by this number")]]
+                                size=4,
+                                tooltip="The haptic intensity for this tracker will be multiplied by this number"),
+                   sg.Button("Calibrate")
+                   ]]
 
         row = [sg.pin(sg.Col(layout, key=('-ROW-', tracker_id)))]
         return row
@@ -164,7 +176,7 @@ class GUIRenderer:
 
     def update_values(self, values):
         # print(f"Values: {values}")
-        if values is None:
+        if values is None or values[KEY_REC_IP] is None:
             return
 
         # Update Tracker OSC Addresses
@@ -193,5 +205,6 @@ class GUIRenderer:
 
     def update_pattern_config(self, values, index: int, key: str):
         self.config.pattern_config_list[index].pattern = values[key + KEY_VIB_PATTERN]
-        self.config.pattern_config_list[index].intensity = int(values[key + KEY_VIB_INTENSITY])
+        self.config.pattern_config_list[index].str_min = int(values[key + KEY_VIB_STR_MIN])
+        self.config.pattern_config_list[index].str_max = int(values[key + KEY_VIB_STR_MAX])
         self.config.pattern_config_list[index].speed = int(values[key + KEY_VIB_SPEED])
