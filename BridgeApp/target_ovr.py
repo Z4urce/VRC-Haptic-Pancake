@@ -1,48 +1,14 @@
-import threading
-import time
 import openvr
+
+from BridgeApp.app_runner import FeedbackThread
 from app_config import VRTracker, AppConfig
 from typing import List, Dict
-
-
-class VibrationManager(threading.Thread):
-    def __init__(self, tracker: VRTracker, pulse_function, config: AppConfig):
-        super().__init__()
-        self.tracker = tracker
-        self.pulse_function = pulse_function
-        self.config = config
-        self.strength: float = 0.0  # Should be treated as a value between 0 and 1
-        self.last_str_set_time = time.time()
-
-        self.interval_ms = 50  # millis
-        self.interval_s = self.interval_ms / 1000  # seconds
-
-    def set_strength(self, strength: float):
-        self.strength = strength
-        self.last_str_set_time = time.time()
-
-    def run(self):
-        print(f"[VibrationManager] Thread started for {self.tracker.serial}")
-
-        while True:
-            start_time = time.time()
-
-            # We stop the pulse if we don't get a new value in a certain time
-            if self.last_str_set_time + (2*self.interval_s) < start_time:
-                self.strength = 0
-
-            # So we pulse every 50 ms that means a 50 ms pulse would be 100%
-            if self.strength > 0:
-                self.pulse_function(self.tracker.index, int(self.strength * self.interval_ms))
-
-            sleep = max(self.interval_s - (time.time() - start_time), 0.0)
-            time.sleep(sleep)
 
 
 class OpenVRTracker:
     def __init__(self, config: AppConfig):
         self.devices: List[VRTracker] = []
-        self.vibration_managers: Dict[str, VibrationManager] = {}
+        self.vibration_managers: Dict[str, FeedbackThread] = {}
         self.vr = None
         self.config = config
 
@@ -74,7 +40,7 @@ class OpenVRTracker:
         # Start a new thread for each device
         for device in self.devices:
             if device.serial not in self.vibration_managers:
-                thread = VibrationManager(device, self.pulse, self.config)
+                thread = FeedbackThread(self.config, device, self.pulse, self.get_battery_level)
                 thread.daemon = True
                 thread.start()
                 self.vibration_managers[device.serial] = thread
@@ -87,9 +53,12 @@ class OpenVRTracker:
     def get_model(self, index):
         return self.vr.getStringTrackedDeviceProperty(index, openvr.Prop_ModelNumber_String)
 
+    def get_battery_level(self, index):
+        return self.vr.getFloatTrackedDeviceProperty(index, openvr.Prop_DeviceBatteryPercentage_Float)
+
     def set_strength(self, serial, strength):
         if serial in self.vibration_managers:
-            self.vibration_managers[serial].strength = strength
+            self.vibration_managers[serial].set_strength(strength)
 
     def pulse(self, index, pulse_length: int = 200):
         if self.is_alive():

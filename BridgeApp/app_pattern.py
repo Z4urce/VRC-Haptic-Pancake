@@ -1,6 +1,6 @@
 import math
 import time
-import numpy as np
+
 from app_config import AppConfig, PatternConfig
 
 

@@ -17,11 +17,13 @@ class VRTracker:  # Work in progress
         self.serial = serial
 
 
-class TrackerVO(BaseModel):
-    serial: str
-    osc_address: str
-    vibration_multiplier: float
-    pattern_override: str
+# TODO !!!!!!!!!!!!!!
+class TrackerConfig(BaseModel):
+    # serial: str
+    address: str = "None"
+    vibration_multiplier: float = 1.0
+    pattern_override: str = "None"
+    battery_threshold: int = 20
 
 
 class PatternConfig(BaseModel):
@@ -46,10 +48,23 @@ class AppConfig(BaseModel):
     tracker_to_osc: Dict[str, str] = {}  # TODO Remove in favor of tracker_dict
     tracker_to_vib_int_override: Dict[str, float] = {}  # TODO Remove in favor of tracker_dict
     pattern_config_list: List[PatternConfig] = []
-    # tracker_dict: Dict[str, VRTracker] = {}
-    # global_vibration_intensity: int = 100
-    # global_vibration_cooldown: int = 100
-    # global_vibration_pattern: str = "None"
+    tracker_config_dict: Dict[str, TrackerConfig] = {}
+
+    def get_multiplier(self, tracker_serial):
+        return self.tracker_to_vib_int_override[tracker_serial]\
+            if tracker_serial in self.tracker_to_vib_int_override else 1.0
+
+    def check_integrity(self):
+        if len(self.pattern_config_list) != 2:
+            self.init_pattern_config()
+
+    def init_pattern_config(self):
+        self.pattern_config_list.clear()
+        # PROXIMITY Defaults: (Linear, 50, 4)
+        from BridgeApp.app_pattern import VibrationPattern
+        self.pattern_config_list.append(PatternConfig(VibrationPattern.VIB_PATTERN_LIST[2], 40, 80, 4))
+        # VELOCITY Defaults: (None, 80, 32)
+        self.pattern_config_list.append(PatternConfig(VibrationPattern.VIB_PATTERN_LIST[0], 40, 80, 32))
 
     @staticmethod
     def load():

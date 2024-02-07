@@ -1,4 +1,3 @@
-from app_pattern import VibrationPattern
 from app_config import AppConfig
 from app_gui import GUIRenderer
 from server_osc import VRChatOSCReceiver
@@ -7,7 +6,6 @@ import traceback
 import platform
 
 osc_receiver: VRChatOSCReceiver = None
-vp: VibrationPattern = None
 vr: OpenVRTracker = None
 config: AppConfig = None
 gui: GUIRenderer = None
@@ -19,12 +17,9 @@ def main():
     # Load the config
     global config
     config = AppConfig.load()
+    config.check_integrity()
     config.save()
     print("[Main] Config loaded")
-
-    # Init vibration pattern config
-    global vp
-    vp = VibrationPattern(config)
 
     # Init GUI
     global gui
@@ -82,13 +77,13 @@ def param_received(osc_address, osc_value):
     for tracker_serial in config.tracker_to_osc.keys():
         if config.tracker_to_osc[tracker_serial] == osc_address:
             # This is a value between 0 and 1
-            vib_strength = vp.apply_pattern(tracker_serial, osc_value)
+            # vib_strength = vp.apply_pattern(tracker_serial, osc_value)
 
             # Apply the custom multiplier.
-            vib_strength *= config.tracker_to_vib_int_override[tracker_serial]\
-                if tracker_serial in config.tracker_to_vib_int_override else 1.0
+            # vib_strength *= config.tracker_to_vib_int_override[tracker_serial]\
+            #     if tracker_serial in config.tracker_to_vib_int_override else 1.0
 
-            vr.set_strength(tracker_serial, vib_strength)
+            vr.set_strength(tracker_serial, osc_value)
 
 
 if __name__ == '__main__':
