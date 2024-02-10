@@ -29,7 +29,8 @@ class VRChatOSCReceiver:
             pass
 
     def run(self):
-        if not self.is_alive(): return
+        if not self.is_alive():
+            return
         self.dispatcher.map("/avatar/parameters/*", self.event_received)
         self.print_status(f"OSC Receiver serving on {self.server.server_address}", True)
         self.server.serve_forever()

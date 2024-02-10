@@ -15,7 +15,9 @@ KEY_OSC_STATUS_BAR = '-OSC-STATUS-BAR-'
 KEY_LAYOUT_TRACKERS = '-LAYOUT-TRACKERS-'
 KEY_OSC_ADDRESS = '-ADDRESS-OF-'
 KEY_VIB_STR_OVERRIDE = '-VIB-STR-'
-KEY_BTN_TEST = '-BTN-TEST'
+KEY_BTN_TEST = '-BTN-TEST-'
+KEY_BTN_CALIBRATE = '-BTN-CALIBRATE-'
+KEY_BATTERY_THRESHOLD = '-BATTERY-'
 
 # Pattern Config
 KEY_PROXIMITY = '-PROXY-'
@@ -77,9 +79,11 @@ class GUIRenderer:
                      k=key + KEY_VIB_PATTERN, size=15, readonly=True, enable_events=True)],
             [sg.Text("Strength:"),
              sg.Text("Min:", pad=0),
-             sg.Spin([num for num in range(0, 100)], pattern_config.str_min, pad=0, key=key+KEY_VIB_STR_MIN),
+             sg.Spin([num for num in range(0, 100)], pattern_config.str_min, pad=0,
+                     key=key+KEY_VIB_STR_MIN,enable_events=True),
              sg.Text("Max:", pad=0),
-             sg.Spin([num for num in range(0, 100)], pattern_config.str_max, pad=0, key=key+KEY_VIB_STR_MAX)],
+             sg.Spin([num for num in range(0, 100)], pattern_config.str_max, pad=0,
+                     key=key+KEY_VIB_STR_MAX, enable_events=True)],
             [sg.Text("Speed:", size=7),
              sg.Slider(range=(1, 64), size=(12, 10), default_value=pattern_config.speed,
                        orientation='horizontal', key=key + KEY_VIB_SPEED, enable_events=True)],
@@ -97,6 +101,8 @@ class GUIRenderer:
         default_vib_int_override = self.config.tracker_to_vib_int_override[tracker_serial] \
             if tracker_serial in self.config.tracker_to_vib_int_override else 1.0
 
+        multiplier_tooltip = "1.0 for Vive trackers\n150 for Tundra trackers\n200 for Vive Wand\n400 for Index c."
+
         print(f"[GUI] Adding tracker: {string}")
         layout = [[sg.Text(string, pad=(0, 0))],
                   [sg.Text(" "), sg.Text("OSC Address:"),
@@ -105,14 +111,16 @@ class GUIRenderer:
                    sg.Button("Test", k=(KEY_BTN_TEST, tracker_id), tooltip="Send a 500ms pulse to the tracker")],
                   [sg.Text(" "),
                    sg.Text("Battery threshold:", tooltip="Disables vibration bellow this battery level"),
-                   sg.Spin([num for num in range(0, 100)], 20, pad=0, key="-TODO-"),
+                   sg.Spin([num for num in range(0, 100)], 20, pad=0,
+                           key=(KEY_BATTERY_THRESHOLD, tracker_serial), enable_events=True),
                    sg.Text("%", pad=0),
                    sg.VSeparator(),
-                   sg.Text("Pulse multiplier:", tooltip="150 for Tundra\n300 for Vive Wand", pad=0),
+                   sg.Text("Pulse multiplier:", tooltip=multiplier_tooltip, pad=0),
                    sg.InputText(default_vib_int_override, k=(KEY_VIB_STR_OVERRIDE, tracker_serial), enable_events=True,
                                 size=4,
                                 tooltip="The haptic intensity for this tracker will be multiplied by this number"),
-                   sg.Button("Calibrate")
+                   sg.Button("Calibrate", button_color='grey', disabled=True, key=(KEY_BTN_CALIBRATE, tracker_serial),
+                             tooltip="Coming soon...")
                    ]]
 
         row = [sg.pin(sg.Col(layout, key=('-ROW-', tracker_id)))]

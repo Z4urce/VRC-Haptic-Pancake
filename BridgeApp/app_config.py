@@ -61,7 +61,7 @@ class AppConfig(BaseModel):
     def init_pattern_config(self):
         self.pattern_config_list.clear()
         # PROXIMITY Defaults: (Linear, 50, 4)
-        from BridgeApp.app_pattern import VibrationPattern
+        from app_pattern import VibrationPattern
         self.pattern_config_list.append(PatternConfig(VibrationPattern.VIB_PATTERN_LIST[2], 40, 80, 4))
         # VELOCITY Defaults: (None, 80, 32)
         self.pattern_config_list.append(PatternConfig(VibrationPattern.VIB_PATTERN_LIST[0], 40, 80, 32))

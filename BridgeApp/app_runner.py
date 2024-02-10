@@ -1,7 +1,7 @@
 import threading
 import time
 
-from BridgeApp.app_pattern import VibrationPattern
+from app_pattern import VibrationPattern
 from app_config import AppConfig, VRTracker, TrackerConfig
 
 
