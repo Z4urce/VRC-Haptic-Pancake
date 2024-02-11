@@ -42,9 +42,9 @@ class PatternConfig(BaseModel):
 
 class AppConfig(BaseModel):
     version: int = 1
-    osc_address: str = "127.0.0.1"
-    # osc_port: int = 9000
-    osc_receiver_port: int = 9001
+    server_type: int = 0
+    server_ip: str = "127.0.0.1"
+    server_port: int = 9001
     tracker_to_osc: Dict[str, str] = {}  # TODO Remove in favor of tracker_dict
     tracker_to_vib_int_override: Dict[str, float] = {}  # TODO Remove in favor of tracker_dict
     pattern_config_list: List[PatternConfig] = []

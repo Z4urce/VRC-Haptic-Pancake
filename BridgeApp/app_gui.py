@@ -6,6 +6,9 @@ from app_pattern import VibrationPattern
 
 WINDOW_NAME = "Haptic Pancake Bridge v0.5.0b"
 
+LIST_SERVER_TYPE = ["OSC (VRChat)", "WebSocket (Resonite)"]
+
+KEY_SERVER_TYPE = '-SERVER-TYPE-'
 KEY_REC_IP = '-REC-IP-'
 KEY_REC_PORT = '-REC-PORT-'
 KEY_BTN_APPLY = '-BTN-APPLY-'
@@ -56,11 +59,11 @@ class GUIRenderer:
         self.layout = [
             [sg.Text('Bridge settings:', font='_ 14')],
             [sg.Text("Server Type:"),
-             sg.InputCombo(["OSC (VRChat)", "WebSocket (Resonite)"], "OSC (VRChat)")],
+             sg.InputCombo(LIST_SERVER_TYPE, LIST_SERVER_TYPE[self.config.server_type], key=KEY_SERVER_TYPE)],
             [sg.Text("Address:", size=9),
-             sg.InputText(self.config.osc_address, k=KEY_REC_IP, size=16, tooltip="IP Address. Default is 127.0.0.1"),
+             sg.InputText(self.config.server_ip, k=KEY_REC_IP, size=16, tooltip="IP Address. Default is 127.0.0.1"),
              sg.Text("Port:", tooltip="UDP Port. Default is 9001"),
-             sg.InputText(self.config.osc_receiver_port, key=KEY_REC_PORT, size=16),
+             sg.InputText(self.config.server_port, key=KEY_REC_PORT, size=16),
              sg.Button("Apply", key=KEY_BTN_APPLY, tooltip="Apply and restart OSC server.")],
             [sg.Text("Server status:"), self.osc_status_bar],
             [self.small_vertical_space()],
@@ -203,8 +206,9 @@ class GUIRenderer:
                     pass  # Ignore the error for now
 
         # Update OSC Addresses
-        self.config.osc_address = values[KEY_REC_IP]
-        self.config.osc_receiver_port = int(values[KEY_REC_PORT])
+        self.config.server_type = LIST_SERVER_TYPE.index(values[KEY_SERVER_TYPE])
+        self.config.server_ip = values[KEY_REC_IP]
+        self.config.server_port = int(values[KEY_REC_PORT])
 
         # Update vibration intensity and pattern
         self.update_pattern_config(values, VibrationPattern.PROXIMITY, KEY_PROXIMITY)

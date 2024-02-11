@@ -1,11 +1,15 @@
+import time
+
 from app_config import AppConfig
 from app_gui import GUIRenderer
+from server_base import ServerBase
 from server_osc import VRChatOSCReceiver
+from server_websocket import ResoniteWebSocketServer
 from target_ovr import OpenVRTracker
 import traceback
 import platform
 
-osc_receiver: VRChatOSCReceiver = None
+bridge_server: ServerBase = None
 vr: OpenVRTracker = None
 config: AppConfig = None
 gui: GUIRenderer = None
@@ -23,13 +27,12 @@ def main():
 
     # Init GUI
     global gui
-    gui = GUIRenderer(config, pulse_test, restart_osc_server, refresh_tracker_list)
+    gui = GUIRenderer(config, pulse_test, restart_bridge_server, refresh_tracker_list)
     print("[Main] GUI initialized")
 
-    # Start the OSC receiver thread
-    global osc_receiver
-    osc_receiver = VRChatOSCReceiver(config, param_received, gui.update_osc_status_bar)
-    osc_receiver.start_server()
+    # Start the Server
+    start_bridge_server()
+
     print("[Main] OSC receiver started")
 
     # Init OpenVR
@@ -47,6 +50,15 @@ def main():
         pass
 
 
+def start_bridge_server():
+    global bridge_server
+    if config.server_type == 1:
+        bridge_server = ResoniteWebSocketServer(config, param_received, gui.update_osc_status_bar)
+    else:
+        bridge_server = VRChatOSCReceiver(config, param_received, gui.update_osc_status_bar)
+    bridge_server.start_server()
+
+
 # Adapter functions
 def pulse_test(tracker_id):
     print(f"[Main] Pulse test for {tracker_id} executed.")
@@ -54,9 +66,11 @@ def pulse_test(tracker_id):
     # param_received("TEST", 1.0)
 
 
-def restart_osc_server():
-    if osc_receiver is not None:
-        osc_receiver.restart_server()
+def restart_bridge_server():
+    if bridge_server is not None:
+        bridge_server.shutdown()
+    time.sleep(.5)
+    start_bridge_server()
 
 
 def refresh_tracker_list():
@@ -89,10 +103,12 @@ def param_received(osc_address, osc_value):
 if __name__ == '__main__':
     try:
         main()
-        if config is not None: config.save()
+        if config is not None:
+            config.save()
     except Exception as e:
         print(f"[Main][ERROR] {e}\n{traceback.format_exc()}")
     finally:
         # Shut down the processes
         print("[Main] Halting...")
-        if osc_receiver is not None: osc_receiver.shutdown()
+        if bridge_server is not None:
+            bridge_server.shutdown()
