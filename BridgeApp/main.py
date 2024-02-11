@@ -1,5 +1,3 @@
-import time
-
 from app_config import AppConfig
 from app_gui import GUIRenderer
 from server_base import ServerBase
@@ -33,7 +31,7 @@ def main():
     # Start the Server
     start_bridge_server()
 
-    print("[Main] OSC receiver started")
+    print("[Main] Bridge server started")
 
     # Init OpenVR
     global vr
@@ -69,7 +67,6 @@ def pulse_test(tracker_id):
 def restart_bridge_server():
     if bridge_server is not None:
         bridge_server.shutdown()
-    time.sleep(.5)
     start_bridge_server()
 
 
@@ -81,23 +78,16 @@ def refresh_tracker_list():
         gui.add_tracker(device.index, device.serial, device.model)
 
     # Debug tracker (Uncomment this for debug purposes)
-    gui.add_tracker(99, "T35T-53R1AL", "Test Model 1.0")
+    # gui.add_tracker(99, "T35T-53R1AL", "Test Model 1.0")
     print("[Main] Tracker list refreshed")
 
 
-def param_received(osc_address, osc_value):
+def param_received(address, value):
     # address is the OSC address
     # value is the floating value (0..1) that determines how intense the feedback should be
     for tracker_serial in config.tracker_to_osc.keys():
-        if config.tracker_to_osc[tracker_serial] == osc_address:
-            # This is a value between 0 and 1
-            # vib_strength = vp.apply_pattern(tracker_serial, osc_value)
-
-            # Apply the custom multiplier.
-            # vib_strength *= config.tracker_to_vib_int_override[tracker_serial]\
-            #     if tracker_serial in config.tracker_to_vib_int_override else 1.0
-
-            vr.set_strength(tracker_serial, osc_value)
+        if config.tracker_to_osc[tracker_serial] == address:
+            vr.set_strength(tracker_serial, value)
 
 
 if __name__ == '__main__':

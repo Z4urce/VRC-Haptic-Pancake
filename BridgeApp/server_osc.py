@@ -14,7 +14,7 @@ class VRChatOSCReceiver(ServerBase):
 
     def shutdown(self):
         if self.is_alive():
-            self.print_status("Shutting down...")
+            self.print_status("Shutting down...", True)
             self.server.shutdown()
             self.server.server_close()
             self.thread.join()

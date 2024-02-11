@@ -64,7 +64,7 @@ class GUIRenderer:
              sg.InputText(self.config.server_ip, k=KEY_REC_IP, size=16, tooltip="IP Address. Default is 127.0.0.1"),
              sg.Text("Port:", tooltip="UDP Port. Default is 9001"),
              sg.InputText(self.config.server_port, key=KEY_REC_PORT, size=16),
-             sg.Button("Apply", key=KEY_BTN_APPLY, tooltip="Apply and restart OSC server.")],
+             sg.Button("Apply", key=KEY_BTN_APPLY, tooltip="Apply and restart server.")],
             [sg.Text("Server status:"), self.osc_status_bar],
             [self.small_vertical_space()],
             [sg.Text('Haptic settings:', font='_ 14')],
@@ -108,9 +108,9 @@ class GUIRenderer:
 
         print(f"[GUI] Adding tracker: {string}")
         layout = [[sg.Text(string, pad=(0, 0))],
-                  [sg.Text(" "), sg.Text("OSC Address:"),
-                   sg.InputText(default_osc_address, k=(KEY_OSC_ADDRESS, tracker_serial), enable_events=True, size=32,
-                                tooltip="OSC Address"),
+                  [sg.Text(" "), sg.Text("Address:"),
+                   sg.InputText(default_osc_address, k=(KEY_OSC_ADDRESS, tracker_serial), enable_events=True, size=37,
+                                tooltip="OSC Address or Resonite Address"),
                    sg.Button("Test", k=(KEY_BTN_TEST, tracker_id), tooltip="Send a 500ms pulse to the tracker")],
                   [sg.Text(" "),
                    sg.Text("Battery threshold:", tooltip="Disables vibration bellow this battery level"),
@@ -159,7 +159,10 @@ class GUIRenderer:
             self.osc_status_bar.DisplayText = message
             self.osc_status_bar.TextColor = text_color
             return
-        self.osc_status_bar.update(message, text_color=text_color)
+        try:
+            self.osc_status_bar.update(message, text_color=text_color)
+        except Exception as e:
+            print("[GUI] Failed to update server status bar.")
 
     def run(self):
         if self.window is None:
