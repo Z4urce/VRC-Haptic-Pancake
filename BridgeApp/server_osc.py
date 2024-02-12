@@ -1,21 +1,20 @@
 from pythonosc.dispatcher import Dispatcher
 from pythonosc import osc_server
+from server_base import ServerBase
 from app_config import AppConfig
 import threading
 
 
-class VRChatOSCReceiver:
+class VRChatOSCReceiver(ServerBase):
     def __init__(self, config: AppConfig, param_received_event, status_update):
+        super().__init__(config, param_received_event, status_update)
         self.thread = None
         self.server = None
-        self.config = config
         self.dispatcher = Dispatcher()
-        self.param_received_event = param_received_event
-        self.status_update = status_update
 
     def shutdown(self):
         if self.is_alive():
-            self.print_status("Shutting down...")
+            self.print_status("Shutting down...", True)
             self.server.shutdown()
             self.server.server_close()
             self.thread.join()
@@ -29,7 +28,8 @@ class VRChatOSCReceiver:
             pass
 
     def run(self):
-        if not self.is_alive(): return
+        if not self.is_alive():
+            return
         self.dispatcher.map("/avatar/parameters/*", self.event_received)
         self.print_status(f"OSC Receiver serving on {self.server.server_address}", True)
         self.server.serve_forever()
@@ -39,10 +39,10 @@ class VRChatOSCReceiver:
 
     def start_server(self):
         try:
-            address = (self.config.osc_address, int(self.config.osc_receiver_port))
+            address = (self.config.server_ip, int(self.config.server_port))
             self.server = osc_server.OSCUDPServer(address, self.dispatcher)
         except Exception as e:
-            self.print_status(f"[ERROR] Port: {self.config.osc_receiver_port} occupied.\n{e}", True, True)
+            self.print_status(f"[ERROR] Port: {self.config.server_port} occupied.\n{e}", True, True)
             return
 
         self.thread = threading.Thread(target=self.run)

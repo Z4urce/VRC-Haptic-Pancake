@@ -6,7 +6,8 @@ from typing import Dict, List, Any
 CONFIG_FILE_NAME: str = "config.json"
 
 
-class VRTracker:  # Work in progress
+# This is a runtime class for storing OVR trackers
+class VRTracker:
     index: int
     model: str
     serial: str
@@ -17,37 +18,84 @@ class VRTracker:  # Work in progress
         self.serial = serial
 
 
-class TrackerVO(BaseModel):
-    serial: str
-    osc_address: str
-    vibration_multiplier: float
-    pattern_override: str
+# This is a definition class for storing user settings per tracker
+class TrackerConfig(BaseModel):
+    # serial: str
+    enabled: bool = True  # Not yet used
+    address: str = "/avatar/parameters/..."
+    vibration_multiplier: float = 1.0
+    pattern_override: str = "None"
+    battery_threshold: int = 20
+
+    def set_vibration_multiplier(self, value):
+        if value is None:
+            return
+        try:
+            self.vibration_multiplier = float(value)
+        except ValueError:
+            self.vibration_multiplier = 1.0
+
+    def set_battery_threshold(self, value):
+        if value is None:
+            return
+        try:
+            self.battery_threshold = int(value)
+        except ValueError:
+            self.battery_threshold = 20
 
 
 class PatternConfig(BaseModel):
     pattern: str = "Linear"
-    intensity: int = 1
+    str_min: int = 20
+    str_max: int = 80
     speed: int = 1
 
-    def __init__(self, pattern: str, intensity: int, speed: int, **data: Any):
+    def __init__(self, pattern: str, str_min: int, str_max: int, speed: int, **data: Any):
         super().__init__(**data)
         self.pattern = pattern
-        self.intensity = int(intensity)
+        self.str_min = str_min
+        self.str_max = str_max
         self.speed = int(speed)
 
 
 class AppConfig(BaseModel):
     version: int = 1
-    osc_address: str = "127.0.0.1"
-    # osc_port: int = 9000
-    osc_receiver_port: int = 9001
-    tracker_to_osc: Dict[str, str] = {}  # TODO Remove in favor of tracker_dict
-    tracker_to_vib_int_override: Dict[str, float] = {}  # TODO Remove in favor of tracker_dict
+    server_type: int = 0
+    server_ip: str = "127.0.0.1"
+    server_port: int = 9001
     pattern_config_list: List[PatternConfig] = []
-    # tracker_dict: Dict[str, VRTracker] = {}
-    # global_vibration_intensity: int = 100
-    # global_vibration_cooldown: int = 100
-    # global_vibration_pattern: str = "None"
+    tracker_config_dict: Dict[str, TrackerConfig] = {}
+
+    # OBSOLETE - Will delete these in the next version
+    tracker_to_osc: Dict[str, str] = {}
+    tracker_to_vib_int_override: Dict[str, float] = {}
+
+    def get_tracker_config(self, device_serial):
+        if device_serial in self.tracker_config_dict:
+            return self.tracker_config_dict[device_serial]
+        result = TrackerConfig()
+        self.tracker_config_dict[device_serial] = result
+        return result
+
+    def check_integrity(self):
+        if len(self.pattern_config_list) != 2:
+            self.init_pattern_config()
+        for key in self.tracker_to_osc:
+            new_config = TrackerConfig()
+            new_config.address = self.tracker_to_osc[key]
+            if key in self.tracker_to_vib_int_override:
+                new_config.vibration_multiplier = self.tracker_to_vib_int_override[key]
+            self.tracker_config_dict[key] = new_config
+        self.tracker_to_osc.clear()
+        self.tracker_to_vib_int_override.clear()
+
+    def init_pattern_config(self):
+        self.pattern_config_list.clear()
+        # PROXIMITY Defaults: (Linear, 50, 4)
+        from app_pattern import VibrationPattern
+        self.pattern_config_list.append(PatternConfig(VibrationPattern.VIB_PATTERN_LIST[4], 0, 80, 4))
+        # VELOCITY Defaults: (None, 80, 32)
+        self.pattern_config_list.append(PatternConfig(VibrationPattern.VIB_PATTERN_LIST[0], 40, 80, 16))
 
     @staticmethod
     def load():
