@@ -1,5 +1,4 @@
 import openvr
-
 from app_runner import FeedbackThread
 from app_config import VRTracker, AppConfig
 from typing import List, Dict

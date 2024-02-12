@@ -1,6 +1,5 @@
 from server_base import ServerBase
 from app_config import AppConfig
-import time
 import json
 import websockets.sync.server
 import threading
