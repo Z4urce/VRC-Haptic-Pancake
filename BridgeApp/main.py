@@ -78,13 +78,13 @@ def refresh_tracker_list():
         gui.add_tracker(device.index, device.serial, device.model)
 
     # Debug tracker (Uncomment this for debug purposes)
-    gui.add_tracker(99, "T35T-53R1AL", "Test Model 1.0")
+    # gui.add_tracker(99, "T35T-53R1AL", "Test Model 1.0")
     print("[Main] Tracker list refreshed")
 
 
 def param_received(address, value):
     # value is the floating value (0..1) that determines how intense the feedback should be
-    for serial, tracker_config in config.tracker_config_dict:
+    for serial, tracker_config in config.tracker_config_dict.items():
         if tracker_config.address == address:
             vr.set_strength(serial, value)
 
