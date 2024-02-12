@@ -4,7 +4,7 @@ import webbrowser
 from app_config import AppConfig, PatternConfig
 from app_pattern import VibrationPattern
 
-WINDOW_NAME = "Haptic Pancake Bridge v0.5.0b"
+WINDOW_NAME = "Haptic Pancake Bridge v0.5.1"
 
 LIST_SERVER_TYPE = ["OSC (VRChat)", "WebSocket (Resonite)"]
 
@@ -63,7 +63,7 @@ class GUIRenderer:
             [sg.Text("Address:", size=9),
              sg.InputText(self.config.server_ip, k=KEY_REC_IP, size=16, tooltip="IP Address. Default is 127.0.0.1"),
              sg.Text("Port:", tooltip="UDP Port. Default is 9001"),
-             sg.InputText(self.config.server_port, key=KEY_REC_PORT, size=16),
+             sg.InputText(self.config.server_port, key=KEY_REC_PORT, size=13),
              sg.Button("Apply", key=KEY_BTN_APPLY, tooltip="Apply and restart server.")],
             [sg.Text("Server status:"), self.osc_status_bar],
             [self.small_vertical_space()],
@@ -76,19 +76,22 @@ class GUIRenderer:
 
     @staticmethod
     def build_pattern_setting_layout(key: str, pattern_list: [str], pattern_config: PatternConfig):
+        speed_tooltip = "Defines the speed of the Throb pattern"
+        pattern_tooltip = VibrationPattern.VIB_PATTERN_TOOLTIP
+
         return [
-            [sg.Text("Pattern:"),
-             sg.Drop(pattern_list, pattern_config.pattern,
+            [sg.Text("Pattern:", tooltip=pattern_tooltip),
+             sg.Drop(pattern_list, pattern_config.pattern, tooltip=pattern_tooltip,
                      k=key + KEY_VIB_PATTERN, size=15, readonly=True, enable_events=True)],
             [sg.Text("Strength:"),
              sg.Text("Min:", pad=0),
              sg.Spin([num for num in range(0, 100)], pattern_config.str_min, pad=0,
-                     key=key+KEY_VIB_STR_MIN,enable_events=True),
+                     key=key + KEY_VIB_STR_MIN, enable_events=True),
              sg.Text("Max:", pad=0),
              sg.Spin([num for num in range(0, 100)], pattern_config.str_max, pad=0,
-                     key=key+KEY_VIB_STR_MAX, enable_events=True)],
-            [sg.Text("Speed:", size=7),
-             sg.Slider(range=(1, 64), size=(12, 10), default_value=pattern_config.speed,
+                     key=key + KEY_VIB_STR_MAX, enable_events=True)],
+            [sg.Text("Speed:", size=6, tooltip=speed_tooltip),
+             sg.Slider(range=(1, 32), size=(13, 10), default_value=pattern_config.speed, tooltip=speed_tooltip,
                        orientation='horizontal', key=key + KEY_VIB_SPEED, enable_events=True)],
         ]
 
@@ -99,27 +102,27 @@ class GUIRenderer:
     def tracker_row(self, tracker_id, tracker_serial, tracker_model):
         string = f"⚫ {tracker_serial} {tracker_model}"
 
-        default_osc_address = self.config.tracker_to_osc[tracker_serial] \
-            if tracker_serial in self.config.tracker_to_osc else "/avatar/parameters/..."
-        default_vib_int_override = self.config.tracker_to_vib_int_override[tracker_serial] \
-            if tracker_serial in self.config.tracker_to_vib_int_override else 1.0
+        dev_config = self.config.get_tracker_config(tracker_serial)
+        address = dev_config.address
+        vib_multiplier = dev_config.vibration_multiplier
+        battery_threshold = dev_config.battery_threshold
 
         multiplier_tooltip = "1.0 for Vive trackers\n150 for Tundra trackers\n200 for Vive Wand\n400 for Index c."
 
         print(f"[GUI] Adding tracker: {string}")
         layout = [[sg.Text(string, pad=(0, 0))],
                   [sg.Text(" "), sg.Text("Address:"),
-                   sg.InputText(default_osc_address, k=(KEY_OSC_ADDRESS, tracker_serial), enable_events=True, size=37,
+                   sg.InputText(address, k=(KEY_OSC_ADDRESS, tracker_serial), enable_events=True, size=35,
                                 tooltip="OSC Address or Resonite Address"),
-                   sg.Button("Test", k=(KEY_BTN_TEST, tracker_id), tooltip="Send a 500ms pulse to the tracker")],
+                   sg.Button("Identify", k=(KEY_BTN_TEST, tracker_id), tooltip="Send a 500ms pulse to the tracker")],
                   [sg.Text(" "),
                    sg.Text("Battery threshold:", tooltip="Disables vibration bellow this battery level"),
-                   sg.Spin([num for num in range(0, 100)], 20, pad=0,
+                   sg.Spin([num for num in range(0, 90)], battery_threshold, pad=0,
                            key=(KEY_BATTERY_THRESHOLD, tracker_serial), enable_events=True),
                    sg.Text("%", pad=0),
                    sg.VSeparator(),
                    sg.Text("Pulse multiplier:", tooltip=multiplier_tooltip, pad=0),
-                   sg.InputText(default_vib_int_override, k=(KEY_VIB_STR_OVERRIDE, tracker_serial), enable_events=True,
+                   sg.InputText(vib_multiplier, k=(KEY_VIB_STR_OVERRIDE, tracker_serial), enable_events=True,
                                 size=4,
                                 tooltip="The haptic intensity for this tracker will be multiplied by this number"),
                    sg.Button("Calibrate", button_color='grey', disabled=True, key=(KEY_BTN_CALIBRATE, tracker_serial),
@@ -147,8 +150,11 @@ class GUIRenderer:
         self.layout.append([sg.Text(message, text_color='red')])
 
     def add_footer(self):
+        cs_tooltip = "Coming soon..."
         self.layout.append([self.small_vertical_space()])
-        self.layout.append([sg.Button("Refresh Tracker List", key=KEY_BTN_REFRESH)])
+        self.layout.append([sg.Button("Refresh Tracker List", size=18, key=KEY_BTN_REFRESH),
+                            sg.Button("Add Serial device", disabled=True, button_color='grey', tooltip=cs_tooltip),
+                            sg.Button("Add Network device", disabled=True, button_color='grey', tooltip=cs_tooltip)])
         self.layout.append([sg.HSep()])
         self.layout.append(
             [sg.Text("Made by Z4urce", enable_events=True, font='Default 8 underline', key=KEY_OPEN_URL)])
@@ -193,20 +199,8 @@ class GUIRenderer:
         if values is None or values[KEY_REC_IP] is None:
             return
 
-        # Update Tracker OSC Addresses
         for tracker in self.trackers:
-            key = (KEY_OSC_ADDRESS, tracker)
-            if key in values:
-                self.config.tracker_to_osc[tracker] = values[key]
-
-        # Update Tracker vibration
-        for tracker in self.trackers:
-            key = (KEY_VIB_STR_OVERRIDE, tracker)
-            if key in values:
-                try:
-                    self.config.tracker_to_vib_int_override[tracker] = float(values[key])
-                except ValueError:
-                    pass  # Ignore the error for now
+            self.update_tracker_config(values, tracker)
 
         # Update OSC Addresses
         self.config.server_type = LIST_SERVER_TYPE.index(values[KEY_SERVER_TYPE])
@@ -217,6 +211,22 @@ class GUIRenderer:
         self.update_pattern_config(values, VibrationPattern.PROXIMITY, KEY_PROXIMITY)
         self.update_pattern_config(values, VibrationPattern.VELOCITY, KEY_VELOCITY)
         self.config.save()
+
+    def update_tracker_config(self, values, tracker: str):
+        # Update Tracker OSC Addresses
+        key = (KEY_OSC_ADDRESS, tracker)
+        if key in values:
+            self.config.get_tracker_config(tracker).address = values[key]
+
+        # Update Tracker vibration
+        key = (KEY_VIB_STR_OVERRIDE, tracker)
+        if key in values:
+            self.config.get_tracker_config(tracker).set_vibration_multiplier(values[key])
+
+        # Update Tracker battery threshold
+        key = (KEY_BATTERY_THRESHOLD, tracker)
+        if key in values:
+            self.config.get_tracker_config(tracker).set_battery_threshold((values[key]))
 
     def update_pattern_config(self, values, index: int, key: str):
         self.config.pattern_config_list[index].pattern = values[key + KEY_VIB_PATTERN]

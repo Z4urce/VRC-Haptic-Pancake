@@ -1,8 +1,7 @@
 import threading
 import time
-
 from app_pattern import VibrationPattern
-from app_config import AppConfig, VRTracker, TrackerConfig
+from app_config import AppConfig, VRTracker
 
 
 class FeedbackThread(threading.Thread):
@@ -15,8 +14,7 @@ class FeedbackThread(threading.Thread):
         self.pulse_function = pulse_function
         self.battery_function = battery_function
 
-        self.tracker_config = config.tracker_config_dict[tracker.serial]\
-            if tracker.serial in config.tracker_config_dict else TrackerConfig()
+        self.tracker_config = config.get_tracker_config(tracker.serial)
 
         self.battery_low_notif = self.LOW_BATTERY_ALERT_COUNT
 
@@ -62,7 +60,8 @@ class FeedbackThread(threading.Thread):
             # Apply Pattern
             patterned_strength = self.vp.apply_pattern(self.tracker.serial, self.strength)
             # Apply Multiplier
-            multiplied_strength = patterned_strength * self.config.get_multiplier(self.tracker.serial)
+            multiplied_strength = (patterned_strength *
+                                   self.config.get_tracker_config(self.tracker.serial).vibration_multiplier)
             # Return
             return multiplied_strength
 
