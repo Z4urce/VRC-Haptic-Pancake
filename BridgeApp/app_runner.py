@@ -53,8 +53,8 @@ class FeedbackThread(threading.Thread):
         self.battery_low_notif = self.LOW_BATTERY_ALERT_COUNT
 
         # We stop the pulse if we don't get a new value in a certain time
-        if self.last_str_set_time + (2 * self.interval_s) < start_time:
-            return 0
+        # if self.last_str_set_time + (2 * self.interval_s) < start_time:
+        #    return 0
 
         if self.strength > 0:
             # Apply Pattern
