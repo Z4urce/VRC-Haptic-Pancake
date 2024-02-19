@@ -11,11 +11,22 @@ class VRTracker:
     index: int
     model: str
     serial: str
+    pulse_multiplier: float
 
     def __init__(self, index: int, model: str, serial: str):
         self.index = index
         self.model = model
         self.serial = serial
+        self.pulse_multiplier = self.get_multiplier(model)
+
+    @staticmethod
+    def get_multiplier(model: str):
+        if model.startswith("Tundra"):
+            return 100.0
+        if model.startswith("VIVE Controller"):
+            return 100.0
+        else:
+            return 1.0
 
 
 # This is a definition class for storing user settings per tracker
@@ -23,7 +34,7 @@ class TrackerConfig(BaseModel):
     # serial: str
     enabled: bool = True  # Not yet used
     address: str = "/avatar/parameters/..."
-    vibration_multiplier: float = 1.0
+    multiplier_override: float = 1.0
     pattern_override: str = "None"
     battery_threshold: int = 20
 
@@ -31,9 +42,9 @@ class TrackerConfig(BaseModel):
         if value is None:
             return
         try:
-            self.vibration_multiplier = float(value)
+            self.multiplier_override = float(value)
         except ValueError:
-            self.vibration_multiplier = 1.0
+            self.multiplier_override = 1.0
 
     def set_battery_threshold(self, value):
         if value is None:
@@ -68,7 +79,6 @@ class AppConfig(BaseModel):
 
     # OBSOLETE - Will delete these in the next version
     tracker_to_osc: Dict[str, str] = {}
-    tracker_to_vib_int_override: Dict[str, float] = {}
 
     def get_tracker_config(self, device_serial):
         if device_serial in self.tracker_config_dict:
@@ -83,11 +93,8 @@ class AppConfig(BaseModel):
         for key in self.tracker_to_osc:
             new_config = TrackerConfig()
             new_config.address = self.tracker_to_osc[key]
-            if key in self.tracker_to_vib_int_override:
-                new_config.vibration_multiplier = self.tracker_to_vib_int_override[key]
             self.tracker_config_dict[key] = new_config
         self.tracker_to_osc.clear()
-        self.tracker_to_vib_int_override.clear()
 
     def init_pattern_config(self):
         self.pattern_config_list.clear()

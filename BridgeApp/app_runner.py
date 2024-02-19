@@ -19,6 +19,7 @@ class FeedbackThread(threading.Thread):
         self.battery_low_notif = self.LOW_BATTERY_ALERT_COUNT
 
         self.strength: float = 0.0  # Should be treated as a value between 0 and 1
+        self.strength_delta: float = 0.0
         self.last_str_set_time = time.time()
 
         self.interval_ms = 50  # millis
@@ -26,7 +27,13 @@ class FeedbackThread(threading.Thread):
 
         self.vp = VibrationPattern(self.config)
 
-    def set_strength(self, strength: float):
+    def set_strength(self, strength):
+        try:
+            strength = float(strength)
+        except ValueError:
+            strength = 0.0
+
+        self.strength_delta += abs(strength - self.strength)
         self.strength = strength
         self.last_str_set_time = time.time()
 
@@ -45,6 +52,7 @@ class FeedbackThread(threading.Thread):
             time.sleep(sleep)
 
     def calculate_strength(self, start_time):
+        # Check the battery threshold
         if self.battery_function(self.tracker.index) < (self.tracker_config.battery_threshold / 100):
             if self.battery_low_notif > 0:
                 self.battery_low_notif -= 1
@@ -52,17 +60,19 @@ class FeedbackThread(threading.Thread):
             return 0
         self.battery_low_notif = self.LOW_BATTERY_ALERT_COUNT
 
-        # We stop the pulse if we don't get a new value in a certain time
-        # if self.last_str_set_time + (2 * self.interval_s) < start_time:
-        #    return 0
+        # Apply Pattern
+        patterned_strength = self.vp.apply_pattern(self.strength, self.strength_delta)
+        self.strength_delta -= patterned_strength
+        if self.strength_delta < 0:
+            self.strength_delta = 0
 
-        if self.strength > 0:
-            # Apply Pattern
-            patterned_strength = self.vp.apply_pattern(self.tracker.serial, self.strength)
-            # Apply Multiplier
-            multiplied_strength = (patterned_strength *
-                                   self.config.get_tracker_config(self.tracker.serial).vibration_multiplier)
-            # Return
-            return multiplied_strength
+        # Apply Multiplier and return
+        if patterned_strength > 0:
+            return self.apply_multiplier(patterned_strength)
 
         return 0
+
+    def apply_multiplier(self, strength):
+        return (strength * self.tracker.pulse_multiplier
+                * self.config.get_tracker_config(self.tracker.serial).multiplier_override)
+

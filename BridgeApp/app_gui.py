@@ -4,7 +4,7 @@ import webbrowser
 from app_config import AppConfig, PatternConfig
 from app_pattern import VibrationPattern
 
-WINDOW_NAME = "Haptic Pancake Bridge v0.5.1"
+WINDOW_NAME = "Haptic Pancake Bridge v0.5.2"
 
 LIST_SERVER_TYPE = ["OSC (VRChat)", "WebSocket (Resonite)"]
 
@@ -104,7 +104,7 @@ class GUIRenderer:
 
         dev_config = self.config.get_tracker_config(tracker_serial)
         address = dev_config.address
-        vib_multiplier = dev_config.vibration_multiplier
+        vib_multiplier = dev_config.multiplier_override
         battery_threshold = dev_config.battery_threshold
 
         multiplier_tooltip = "1.0 for Vive trackers\n150 for Tundra trackers\n200 for Vive Wand\n400 for Index c."
