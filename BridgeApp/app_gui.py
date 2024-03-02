@@ -114,7 +114,7 @@ class GUIRenderer:
                   [sg.Text(" "), sg.Text("Address:"),
                    sg.InputText(address, k=(KEY_OSC_ADDRESS, tracker_serial), enable_events=True, size=35,
                                 tooltip="OSC Address or Resonite Address"),
-                   sg.Button("Identify", k=(KEY_BTN_TEST, tracker_id), tooltip="Send a 500ms pulse to the tracker")],
+                   sg.Button("Identify", k=(KEY_BTN_TEST, tracker_serial), tooltip="Send a 500ms pulse to the tracker")],
                   [sg.Text(" "),
                    sg.Text("Battery threshold:", tooltip="Disables vibration bellow this battery level"),
                    sg.Spin([num for num in range(0, 90)], battery_threshold, pad=0,

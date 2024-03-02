@@ -76,3 +76,5 @@ class FeedbackThread(threading.Thread):
         return (strength * self.tracker.pulse_multiplier
                 * self.config.get_tracker_config(self.tracker.serial).multiplier_override)
 
+    def force_pulse(self, length):
+        self.pulse_function(self.tracker.index, int(length * self.tracker.pulse_multiplier))

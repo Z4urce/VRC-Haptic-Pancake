@@ -39,7 +39,7 @@ class OpenVRTracker:
         # Start a new thread for each device
         for device in self.devices:
             if device.serial not in self.vibration_managers:
-                thread = FeedbackThread(self.config, device, self.pulse, self.get_battery_level)
+                thread = FeedbackThread(self.config, device, self.__pulse, self.get_battery_level)
                 thread.daemon = True
                 thread.start()
                 self.vibration_managers[device.serial] = thread
@@ -63,15 +63,13 @@ class OpenVRTracker:
         if serial in self.vibration_managers:
             self.vibration_managers[serial].set_strength(strength)
 
-    def pulse(self, index, pulse_length: int = 200):
-        if self.is_alive():
-            self.vr.triggerHapticPulse(index, 0, pulse_length)
-
     def pulse_by_serial(self, serial, pulse_length: int = 200):
-        for device in self.devices:
-            if device.serial == serial:
-                self.pulse(device.index, pulse_length)
-                return
+        if serial in self.vibration_managers:
+            self.vibration_managers[serial].force_pulse(pulse_length)
 
     def is_alive(self):
         return self.vr is not None
+
+    def __pulse(self, index, pulse_length: int = 200):
+        if self.is_alive():
+            self.vr.triggerHapticPulse(index, 0, pulse_length)

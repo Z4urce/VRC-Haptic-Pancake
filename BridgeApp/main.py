@@ -58,9 +58,9 @@ def start_bridge_server():
 
 
 # Adapter functions
-def pulse_test(tracker_id):
-    print(f"[Main] Pulse test for {tracker_id} executed.")
-    vr.pulse(tracker_id, 500)
+def pulse_test(tracker_serial):
+    print(f"[Main] Pulse test for {tracker_serial} executed.")
+    vr.pulse_by_serial(tracker_serial, 500)
     # param_received("TEST", 1.0)
 
 
