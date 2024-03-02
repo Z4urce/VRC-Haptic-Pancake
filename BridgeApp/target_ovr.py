@@ -50,7 +50,11 @@ class OpenVRTracker:
         return self.vr.getStringTrackedDeviceProperty(index, openvr.Prop_SerialNumber_String)
 
     def get_model(self, index):
-        return self.vr.getStringTrackedDeviceProperty(index, openvr.Prop_ModelNumber_String)
+        try:
+            result = self.vr.getStringTrackedDeviceProperty(index, openvr.Prop_ModelNumber_String)
+        except openvr.error_code.TrackedProp_UnknownProperty:
+            result = "Unknown Tracker"
+        return result
 
     def get_battery_level(self, index):
         return self.vr.getFloatTrackedDeviceProperty(index, openvr.Prop_DeviceBatteryPercentage_Float)
