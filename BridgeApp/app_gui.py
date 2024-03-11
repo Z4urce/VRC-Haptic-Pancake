@@ -20,6 +20,7 @@ KEY_OSC_ADDRESS = '-ADDRESS-OF-'
 KEY_VIB_STR_OVERRIDE = '-VIB-STR-'
 KEY_BTN_TEST = '-BTN-TEST-'
 KEY_BTN_CALIBRATE = '-BTN-CALIBRATE-'
+KEY_BTN_ADD_EXTERNAL = '-BTN-ADD-EXTERNAL-'
 KEY_BATTERY_THRESHOLD = '-BATTERY-'
 
 # Pattern Config
@@ -33,11 +34,14 @@ KEY_VIB_SPEED = '-VIB-SPD-'
 
 
 class GUIRenderer:
-    def __init__(self, app_config: AppConfig, tracker_test_event, restart_osc_event, refresh_trackers_event):
-        sg.theme('DarkAmber')  # Add a touch of color
+    def __init__(self, app_config: AppConfig, tracker_test_event,
+                 restart_osc_event, refresh_trackers_event, add_external_event):
+        sg.theme('DarkAmber')
         self.tracker_test_event = tracker_test_event
         self.restart_osc_event = restart_osc_event
         self.refresh_trackers_event = refresh_trackers_event
+        self.add_external_event = add_external_event
+
         self.config = app_config
         self.window = None
         self.trackers = []
@@ -99,49 +103,90 @@ class GUIRenderer:
     def small_vertical_space():
         return sg.Text('', font=('AnyFont', 1), auto_size_text=True)
 
-    def tracker_row(self, tracker_id, tracker_serial, tracker_model):
-        string = f"⚫ {tracker_serial} {tracker_model}"
+    def device_row(self, tracker_serial, tracker_model, additional_layout, icon=None):
+        if icon is None:
+            icon = "⚫"
+
+        string = f"{icon} {tracker_serial} {tracker_model}"
 
         dev_config = self.config.get_tracker_config(tracker_serial)
         address = dev_config.address
-        vib_multiplier = dev_config.multiplier_override
-        battery_threshold = dev_config.battery_threshold
-
-        multiplier_tooltip = "1.0 for Vive trackers\n150 for Tundra trackers\n200 for Vive Wand\n400 for Index c."
 
         print(f"[GUI] Adding tracker: {string}")
-        layout = [[sg.Text(string, pad=(0, 0))],
-                  [sg.Text(" "), sg.Text("Address:"),
-                   sg.InputText(address, k=(KEY_OSC_ADDRESS, tracker_serial), enable_events=True, size=35,
-                                tooltip="OSC Address or Resonite Address"),
-                   sg.Button("Identify", k=(KEY_BTN_TEST, tracker_serial), tooltip="Send a 500ms pulse to the tracker")],
-                  [sg.Text(" "),
-                   sg.Text("Battery threshold:", tooltip="Disables vibration bellow this battery level"),
-                   sg.Spin([num for num in range(0, 90)], battery_threshold, pad=0,
-                           key=(KEY_BATTERY_THRESHOLD, tracker_serial), enable_events=True),
-                   sg.Text("%", pad=0),
-                   sg.VSeparator(),
-                   sg.Text("Pulse multiplier:", tooltip=multiplier_tooltip, pad=0),
-                   sg.InputText(vib_multiplier, k=(KEY_VIB_STR_OVERRIDE, tracker_serial), enable_events=True,
-                                size=4,
-                                tooltip="The haptic intensity for this tracker will be multiplied by this number"),
-                   sg.Button("Calibrate", button_color='grey', disabled=True, key=(KEY_BTN_CALIBRATE, tracker_serial),
-                             tooltip="Coming soon...")
-                   ]]
+        layout = [
+            [sg.Text(string, pad=(0, 0))],
+            [sg.Text(" "), sg.Text("Address:"),
+             sg.InputText(address, k=(KEY_OSC_ADDRESS, tracker_serial),
+                          enable_events=True, size=35,
+                          tooltip="OSC Address or Resonite Address"),
+             sg.Button("Identify", k=(KEY_BTN_TEST, tracker_serial),
+                       tooltip="Send a 500ms pulse to the tracker")],
+            additional_layout]
 
-        row = [sg.pin(sg.Col(layout, key=('-ROW-', tracker_id)))]
+        row = [sg.pin(sg.Col(layout, key=('-ROW-', tracker_serial)))]
         return row
 
-    def add_tracker(self, tracker_id, tracker_serial, tracker_model):
+    def tracker_row(self, tracker_serial, tracker_model):
+        dev_config = self.config.get_tracker_config(tracker_serial)
+        vib_multiplier = dev_config.multiplier_override
+        battery_threshold = dev_config.battery_threshold
+        multiplier_tooltip = "The haptic intensity for this tracker will be multiplied by this number"
+
+        tr = [sg.Text(" "),
+              sg.Text("Battery threshold:", tooltip="Disables vibration bellow this battery level"),
+              sg.Spin([num for num in range(0, 90)], battery_threshold, pad=0,
+                      key=(KEY_BATTERY_THRESHOLD, tracker_serial), enable_events=True),
+              sg.Text("%", pad=0),
+              sg.VSeparator(),
+              sg.Text("Pulse multiplier:", tooltip=multiplier_tooltip, pad=0),
+              sg.InputText(vib_multiplier, k=(KEY_VIB_STR_OVERRIDE, tracker_serial), enable_events=True,
+                           size=4, tooltip=multiplier_tooltip),
+              sg.Button("Calibrate", button_color='grey', disabled=True, key=(KEY_BTN_CALIBRATE, tracker_serial),
+                        tooltip="Coming soon...")]
+        return self.device_row(tracker_serial, tracker_model, tr)
+
+    def add_tracker(self, tracker_serial, tracker_model):
+        row = [self.tracker_row(tracker_serial, tracker_model)]
+        self.add_target(tracker_serial, tracker_model, row)
+
+    def add_external_device(self, device_serial, device_model):
+        layout = []
+        icon = None
+
+        if device_serial.startswith("EMUSND"):
+            layout.append(sg.Text(" "))
+            layout.append(sg.Text("Sound:", size=6))
+            layout.append(sg.InputText("Default", size=35))
+            layout.append(sg.FileBrowse("Browse", key=(KEY_BTN_TEST, device_serial)))
+            icon = "🔊"
+        if device_serial.startswith("EMUTXT"):
+            layout.append(sg.Text(" "))
+            layout.append(sg.Button("Open Output Window"))
+            icon = "📝"
+        if device_serial.startswith("SERIALCOM"):
+            layout.append(sg.Text(" "))
+            layout.append(sg.Text("COM Port:", size=8))
+            layout.append(sg.InputText("COM6", size=33))
+            layout.append(sg.FileBrowse("Browse", key=(KEY_BTN_TEST, device_serial)))
+            icon = "〰"
+        if device_serial.startswith("NETWORK"):
+            layout.append(sg.Text(" "))
+            layout.append(sg.Text("Server IP:", size=8))
+            layout.append(sg.InputText("192.168.1.67", size=33))
+            icon = "📡"
+
+        row = [self.device_row(device_serial, device_model, layout, icon=icon)]
+        self.add_target(device_serial, device_model, row)
+
+    def add_target(self, tracker_serial, tracker_model, layout):
         if tracker_serial in self.trackers:
-            print(f"[GUI] Tracker {tracker_serial} is already on the list. Skipping...")
+            print(f"[GUI] Device {tracker_serial} is already on the list. Skipping...")
             return
 
-        row = [self.tracker_row(tracker_id, tracker_serial, tracker_model)]
         if self.window is not None:
-            self.window.extend_layout(self.window[KEY_LAYOUT_TRACKERS], row)
+            self.window.extend_layout(self.window[KEY_LAYOUT_TRACKERS], layout)
         else:
-            self.tracker_frame.layout(row)
+            self.tracker_frame.layout(layout)
 
         self.trackers.append(tracker_serial)
 
@@ -150,11 +195,12 @@ class GUIRenderer:
         self.layout.append([sg.Text(message, text_color='red')])
 
     def add_footer(self):
-        cs_tooltip = "Coming soon..."
+        external_devices = ['Add', ['Emulated (Sound)::EMUSND', 'Emulated (Text)::EMUTXT',
+                                    'Serial (COM port)::SERIALCOM', 'Network (Server)::NETWORK']]
         self.layout.append([self.small_vertical_space()])
         self.layout.append([sg.Button("Refresh Tracker List", size=18, key=KEY_BTN_REFRESH),
-                            sg.Button("Add Serial device", disabled=True, button_color='grey', tooltip=cs_tooltip),
-                            sg.Button("Add Network device", disabled=True, button_color='grey', tooltip=cs_tooltip)])
+                            sg.ButtonMenu("Add External device", external_devices, key=KEY_BTN_ADD_EXTERNAL,
+                                          tooltip="Add an external feedback device"), ])
         self.layout.append([sg.HSep()])
         self.layout.append(
             [sg.Text("Made by Z4urce", enable_events=True, font='Default 8 underline', key=KEY_OPEN_URL)])
@@ -185,6 +231,8 @@ class GUIRenderer:
             return False
         if event[0] == KEY_BTN_TEST:
             self.tracker_test_event(event[1])
+        if event == KEY_BTN_ADD_EXTERNAL:
+            self.add_external_event(values[KEY_BTN_ADD_EXTERNAL])
         if event == KEY_BTN_APPLY:
             self.restart_osc_event()
         if event == KEY_BTN_REFRESH:
