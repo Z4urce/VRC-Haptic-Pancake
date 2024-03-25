@@ -22,7 +22,32 @@ class FeedbackThread(threading.Thread):
         self.strength_delta: float = 0.0
         self.last_str_set_time = time.time()
 
-        self.interval_ms = 50  # millis
+        #self.interval_ms = 50  # millis
+        # HACK: test spacing out pulses
+        self.interval_ms = 5.1  # millis
+        # FIXME: Find the slowest interval that allows for a full-duration
+        # pulse on e.g. Tundra Trackers.
+        #
+        # TODO:
+        #   Try switching from "triggerHapticPulse()" to IVRInput
+        #   triggerHapticPulse() is deprecated as per
+        #   See https://github.com/ValveSoftware/openvr/blob/v2.2.3/headers/openvr.h#L2431-L2433
+        #   And https://github.com/ValveSoftware/openvr/blob/v2.2.3/headers/openvr.h#L5216-L5218
+        #
+        #   This might be specific to Tundra Trackers vs. Vive Trackers, as
+        #   Tundra ships their IO Expansion board with a LRA/haptic actuator
+        #
+        #   Failing that, this thread could detect Tundra Trackers by model and
+        #   adjust the interval, and adapt the force_pulse() function to
+        #   automatically queue up anything that exceeds the max duration to be
+        #   applied as a series of max duration pulses (until queue is empty).
+        #
+        #   Example:
+        #     force_pulse() -> self.force_pulse_queue = 500 (ms)
+        #     run()
+        #       inside while True, also check if force_pulse_queue > 0
+        #         triggerHapticPulse(max_duration)
+        #         force_pulse_queue -= max_duration
         self.interval_s = self.interval_ms / 1000  # seconds
 
         self.vp = VibrationPattern(self.config)

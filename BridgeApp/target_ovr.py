@@ -3,6 +3,8 @@ from app_runner import FeedbackThread
 from app_config import VRTracker, AppConfig
 from typing import List, Dict
 
+## HACK: test spacing out pulses
+#import time
 
 class OpenVRTracker:
     def __init__(self, config: AppConfig):
@@ -79,3 +81,18 @@ class OpenVRTracker:
     def __pulse(self, index, pulse_length: int = 200):
         if self.is_alive():
             self.vr.triggerHapticPulse(index, 0, pulse_length)
+            # HACK: test spacing out pulses
+            #pulse_max_amount = 3999
+            pulse_max_amount = 5000
+            #sleep_min_delay = pulse_max_amount / 1000000
+            #sleep_min_delay = 5000 / 1000000
+            if pulse_length > pulse_max_amount:
+                print("PULSE LENGTH > " + str(pulse_max_amount) + ": " + str(pulse_length))
+            #print("PULSE LENGTH: " + str(pulse_length))
+            #while pulse_length > 3999:
+            #    self.vr.triggerHapticPulse(index, 0, pulse_max_amount)
+            #    pulse_length -= pulse_max_amount
+            #    time.sleep(sleep_min_delay)
+            #if pulse_length > 0:
+            #    self.vr.triggerHapticPulse(index, 0, pulse_length)
+            #    time.sleep(sleep_min_delay)
