@@ -108,7 +108,7 @@ class GUIRenderer:
         vib_multiplier = dev_config.multiplier_override
         battery_threshold = dev_config.battery_threshold
 
-        multiplier_tooltip = "1.0 for Vive trackers\n150 for Tundra trackers\n200 for Vive Wand\n400 for Index c."
+        multiplier_tooltip = "Additional strength multiplier\nCompensates for different trackers\n1.0 for default (Vive/Tundra Tracker)\n200 for Vive Wand\n400 for Index c."
 
         print(f"[GUI] Adding tracker: {string}")
         layout = [[sg.Text(string, pad=(0, 0))],

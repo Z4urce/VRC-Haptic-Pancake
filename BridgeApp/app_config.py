@@ -21,12 +21,11 @@ class VRTracker:
 
     @staticmethod
     def get_multiplier(model: str):
-        if model.startswith("Tundra"):
-            return 100.0
         if model.startswith("VIVE Controller"):
             return 100.0
-        else:
-            return 1.0
+
+        # Vive Tracker, Tundra Tracker, etc
+        return 1.0
 
 
 # This is a definition class for storing user settings per tracker
