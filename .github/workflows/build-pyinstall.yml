@@ -1,15 +1,23 @@
-name: Build with PyInstaller
-
-# From https://github.com/sayyid5416/pyinstaller
+name: Build PyInstall
+# Based on https://github.com/sayyid5416/pyinstaller
 
 on:
-  push:
-  pull_request:
+  # All branches:
+  [ push, pull_request, workflow_dispatch ]
+  # "main" only:
+  #push:
+  #  branches: [ "main" ]
+  #pull_request:
+  #  branches: [ "main" ]
+  #workflow_dispatch:
+  #  branches: [ "main" ]
 
 # Get git tag info via GitHub API due to shallow clone:
-# See https://github.com/marketplace/actions/gh-describe
-# And https://stackoverflow.com/questions/66349002/get-latest-tag-git-describe-tags-when-repo-is-cloned-with-depth-1
-# And https://dev.to/hectorleiva/github-actions-and-creating-a-short-sha-hash-8b7
+# See...
+#     https://github.com/marketplace/actions/gh-describe
+# Alongside these resources, not used here:
+#     https://stackoverflow.com/questions/66349002/get-latest-tag-git-describe-tags-when-repo-is-cloned-with-depth-1
+#     https://dev.to/hectorleiva/github-actions-and-creating-a-short-sha-hash-8b7
 
 jobs:
   pyinstall-windows:
