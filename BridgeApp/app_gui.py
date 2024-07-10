@@ -1,4 +1,4 @@
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 import webbrowser
 
 from app_config import AppConfig, PatternConfig
@@ -39,6 +39,7 @@ class GUIRenderer:
         self.restart_osc_event = restart_osc_event
         self.refresh_trackers_event = refresh_trackers_event
         self.config = app_config
+        self.shutting_down = False
         self.window = None
         self.trackers = []
         self.osc_status_bar = sg.Text('', key=KEY_OSC_STATUS_BAR)
@@ -165,10 +166,11 @@ class GUIRenderer:
             self.osc_status_bar.DisplayText = message
             self.osc_status_bar.TextColor = text_color
             return
-        try:
-            self.osc_status_bar.update(message, text_color=text_color)
-        except Exception as e:
-            print("[GUI] Failed to update server status bar.")
+        if not self.shutting_down:
+            try:
+                self.osc_status_bar.update(message, text_color=text_color)
+            except Exception as e:
+                print("[GUI] Failed to update server status bar.")
 
     def run(self):
         if self.window is None:
@@ -181,6 +183,7 @@ class GUIRenderer:
 
         # React to Event
         if event == sg.WIN_CLOSED or event == 'Exit':  # if user closes window or clicks cancel
+            self.shutting_down = True
             print("[GUI] Closing application.")
             return False
         if event[0] == KEY_BTN_TEST:

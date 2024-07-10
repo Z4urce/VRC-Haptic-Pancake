@@ -1,6 +1,6 @@
-pysimplegui==4.60.5
-openvr==1.26.701
-pydantic==2.5.3
-pyserial==3.5
-python-osc==1.8.3
-websockets==12.0
+freesimplegui~=5.1.0
+openvr~=1.26.701
+pydantic~=2.8.0
+pyserial~=3.5
+python-osc~=1.8.3
+websockets~=12.0
