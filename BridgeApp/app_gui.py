@@ -86,10 +86,10 @@ class GUIRenderer:
                      k=key + KEY_VIB_PATTERN, size=15, readonly=True, enable_events=True)],
             [sg.Text("Strength:"),
              sg.Text("Min:", pad=0),
-             sg.Spin([num for num in range(0, 100)], pattern_config.str_min, pad=0,
+             sg.Spin([num for num in range(0, 101)], pattern_config.str_min, pad=0,
                      key=key + KEY_VIB_STR_MIN, enable_events=True),
              sg.Text("Max:", pad=0),
-             sg.Spin([num for num in range(0, 100)], pattern_config.str_max, pad=0,
+             sg.Spin([num for num in range(0, 101)], pattern_config.str_max, pad=0,
                      key=key + KEY_VIB_STR_MAX, enable_events=True)],
             [sg.Text("Speed:", size=6, tooltip=speed_tooltip),
              sg.Slider(range=(1, 32), size=(13, 10), default_value=pattern_config.speed, tooltip=speed_tooltip,
@@ -108,7 +108,7 @@ class GUIRenderer:
         vib_multiplier = dev_config.multiplier_override
         battery_threshold = dev_config.battery_threshold
 
-        multiplier_tooltip = "1.0 for Vive trackers\n150 for Tundra trackers\n200 for Vive Wand\n400 for Index c."
+        multiplier_tooltip = "Additional strength multiplier\nCompensates for different trackers\n1.0 for default (Vive/Tundra Tracker)\n200 for Vive Wand\n400 for Index c."
 
         print(f"[GUI] Adding tracker: {string}")
         layout = [[sg.Text(string, pad=(0, 0))],
@@ -118,7 +118,7 @@ class GUIRenderer:
                    sg.Button("Identify", k=(KEY_BTN_TEST, tracker_serial), tooltip="Send a 500ms pulse to the tracker")],
                   [sg.Text(" "),
                    sg.Text("Battery threshold:", tooltip="Disables vibration bellow this battery level"),
-                   sg.Spin([num for num in range(0, 90)], battery_threshold, pad=0,
+                   sg.Spin([num for num in range(0, 91)], battery_threshold, pad=0,
                            key=(KEY_BATTERY_THRESHOLD, tracker_serial), enable_events=True),
                    sg.Text("%", pad=0),
                    sg.VSeparator(),
