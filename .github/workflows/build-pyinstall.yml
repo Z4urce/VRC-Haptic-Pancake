@@ -2,14 +2,14 @@ name: Build PyInstall
 # Based on https://github.com/sayyid5416/pyinstaller
 
 on:
-  # All branches:
-  [ push, pull_request, workflow_dispatch ]
-  # "main" only:
-  #push:
-  #  branches: [ "main" ]
-  #pull_request:
-  #  branches: [ "main" ]
-  #workflow_dispatch:
+  push:
+  pull_request:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    # Run at 06:21 UTC on the 8th of every month (odd time to reduce load)
+    - cron: '21 06 8 * *'
+  workflow_dispatch:
+  # To limit to "main" branch, add to above...
   #  branches: [ "main" ]
 
 # Get git tag info via GitHub API due to shallow clone:
