@@ -4,7 +4,7 @@ import webbrowser
 from app_config import AppConfig, PatternConfig
 from app_pattern import VibrationPattern
 
-WINDOW_NAME = "Haptic Pancake Bridge v0.5.3a"
+WINDOW_NAME = "Haptic Pancake Bridge v0.6.0a"
 
 LIST_SERVER_TYPE = ["OSC (VRChat)", "WebSocket (Resonite)"]
 
