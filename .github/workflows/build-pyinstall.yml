@@ -1,0 +1,69 @@
+name: Build PyInstall
+# Based on https://github.com/sayyid5416/pyinstaller
+
+on:
+  push:
+  pull_request:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    # Run at 06:21 UTC on the 8th of every month (odd time to reduce load)
+    - cron: '21 06 8 * *'
+  workflow_dispatch:
+  # To limit to "main" branch, add to above...
+  #  branches: [ "main" ]
+
+# Get git tag info via GitHub API due to shallow clone:
+# See...
+#     https://github.com/marketplace/actions/gh-describe
+# Alongside these resources, not used here:
+#     https://stackoverflow.com/questions/66349002/get-latest-tag-git-describe-tags-when-repo-is-cloned-with-depth-1
+#     https://dev.to/hectorleiva/github-actions-and-creating-a-short-sha-hash-8b7
+
+jobs:
+  pyinstall-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Git describe
+        id: ghd
+        uses: proudust/gh-describe@v2
+        with:
+          default: "notags-${{ github.sha }}"
+      - name: Check outputs
+        run: |
+          echo "describe  : ${{ steps.ghd.outputs.describe }}"
+          echo "tag       : ${{ steps.ghd.outputs.tag }}"
+          echo "distance  : ${{ steps.ghd.outputs.distance }}"
+          echo "sha       : ${{ steps.ghd.outputs.sha }}"
+          echo "short-sha : ${{ steps.ghd.outputs.short-sha }}"
+      - name: Build executable
+        uses: sayyid5416/pyinstaller@v1
+        with:
+          spec: 'hapticpancake.spec'
+          requirements: 'BridgeApp/requirements.txt'
+          upload_exe_with_name: 'hapticpancake_windows_${{ steps.ghd.outputs.describe }}'
+          # options: --onefile, --windowed, --collect-all openvr, --name "hapticpancake", --icon=Images\icon.ico
+          # These options are not used when passing in a .spec file
+
+  pyinstall-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git describe
+        id: ghd
+        uses: proudust/gh-describe@v2
+        with:
+          default: "notags-${{ github.sha }}"
+      - name: Check outputs
+        run: |
+          echo "describe  : ${{ steps.ghd.outputs.describe }}"
+          echo "tag       : ${{ steps.ghd.outputs.tag }}"
+          echo "distance  : ${{ steps.ghd.outputs.distance }}"
+          echo "sha       : ${{ steps.ghd.outputs.sha }}"
+          echo "short-sha : ${{ steps.ghd.outputs.short-sha }}"
+      - name: Build executable
+        uses: sayyid5416/pyinstaller@v1
+        with:
+          spec: 'hapticpancake.spec'
+          requirements: 'BridgeApp/requirements.txt'
+          upload_exe_with_name: 'hapticpancake_linux_${{ steps.ghd.outputs.describe }}'
+          # options: --onefile, --windowed, --collect-all openvr, --name "hapticpancake", --icon=Images\icon.ico
+          # These options are not used when passing in a .spec file

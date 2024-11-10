@@ -51,13 +51,19 @@ class OpenVRTracker:
 
     def get_model(self, index):
         try:
-            result = self.vr.getStringTrackedDeviceProperty(index, openvr.Prop_ModelNumber_String)
+            return self.vr.getStringTrackedDeviceProperty(index, openvr.Prop_ModelNumber_String)
         except openvr.error_code.TrackedProp_UnknownProperty:
-            result = "Unknown Tracker"
-        return result
+            # Some devices (e.g. Vive Tracker 1.0) don't report a model number.
+            return "Unknown Tracker"
 
     def get_battery_level(self, index):
-        return self.vr.getFloatTrackedDeviceProperty(index, openvr.Prop_DeviceBatteryPercentage_Float)
+        try:
+            return self.vr.getFloatTrackedDeviceProperty(index, openvr.Prop_DeviceBatteryPercentage_Float)
+        except openvr.error_code.TrackedProp_UnknownProperty:
+            # Some devices (e.g. Tundra Trackers) may be delayed in reporting a
+            # battery percentage, especially if fully charged.  If missing,
+            # assume 100% battery.
+            return 1
 
     def set_strength(self, serial, strength):
         if serial in self.vibration_managers:

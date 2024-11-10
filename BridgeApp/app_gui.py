@@ -1,4 +1,4 @@
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 import webbrowser
 
 from app_config import AppConfig, PatternConfig
@@ -43,6 +43,7 @@ class GUIRenderer:
         self.add_external_event = add_external_event
 
         self.config = app_config
+        self.shutting_down = False
         self.window = None
         self.trackers = []
         self.osc_status_bar = sg.Text('', key=KEY_OSC_STATUS_BAR)
@@ -89,10 +90,10 @@ class GUIRenderer:
                      k=key + KEY_VIB_PATTERN, size=15, readonly=True, enable_events=True)],
             [sg.Text("Strength:"),
              sg.Text("Min:", pad=0),
-             sg.Spin([num for num in range(0, 100)], pattern_config.str_min, pad=0,
+             sg.Spin([num for num in range(0, 101)], pattern_config.str_min, pad=0,
                      key=key + KEY_VIB_STR_MIN, enable_events=True),
              sg.Text("Max:", pad=0),
-             sg.Spin([num for num in range(0, 100)], pattern_config.str_max, pad=0,
+             sg.Spin([num for num in range(0, 101)], pattern_config.str_max, pad=0,
                      key=key + KEY_VIB_STR_MAX, enable_events=True)],
             [sg.Text("Speed:", size=6, tooltip=speed_tooltip),
              sg.Slider(range=(1, 32), size=(13, 10), default_value=pattern_config.speed, tooltip=speed_tooltip,
@@ -111,6 +112,10 @@ class GUIRenderer:
 
         dev_config = self.config.get_tracker_config(tracker_serial)
         address = dev_config.address
+        vib_multiplier = dev_config.multiplier_override
+        battery_threshold = dev_config.battery_threshold
+
+        multiplier_tooltip = "Additional strength multiplier\nCompensates for different trackers\n1.0 for default (Vive/Tundra Tracker)\n200 for Vive Wand\n400 for Index c."
 
         print(f"[GUI] Adding tracker: {string}")
         layout = [
@@ -180,13 +185,14 @@ class GUIRenderer:
 
     def add_target(self, tracker_serial, tracker_model, layout):
         if tracker_serial in self.trackers:
-            print(f"[GUI] Device {tracker_serial} is already on the list. Skipping...")
+            print(f"[GUI] Tracker {tracker_serial} is already on the list. Skipping...")
             return
 
+        row = [self.tracker_row(tracker_id, tracker_serial, tracker_model)]
         if self.window is not None:
-            self.window.extend_layout(self.window[KEY_LAYOUT_TRACKERS], layout)
+            self.window.extend_layout(self.window[KEY_LAYOUT_TRACKERS], row)
         else:
-            self.tracker_frame.layout(layout)
+            self.tracker_frame.layout(row)
 
         self.trackers.append(tracker_serial)
 
@@ -211,10 +217,11 @@ class GUIRenderer:
             self.osc_status_bar.DisplayText = message
             self.osc_status_bar.TextColor = text_color
             return
-        try:
-            self.osc_status_bar.update(message, text_color=text_color)
-        except Exception as e:
-            print("[GUI] Failed to update server status bar.")
+        if not self.shutting_down:
+            try:
+                self.osc_status_bar.update(message, text_color=text_color)
+            except Exception as e:
+                print("[GUI] Failed to update server status bar.")
 
     def run(self):
         if self.window is None:
@@ -227,6 +234,7 @@ class GUIRenderer:
 
         # React to Event
         if event == sg.WIN_CLOSED or event == 'Exit':  # if user closes window or clicks cancel
+            self.shutting_down = True
             print("[GUI] Closing application.")
             return False
         if event[0] == KEY_BTN_TEST:
