@@ -188,7 +188,7 @@ class GUIRenderer:
             print(f"[GUI] Tracker {tracker_serial} is already on the list. Skipping...")
             return
 
-        row = [self.tracker_row(tracker_id, tracker_serial, tracker_model)]
+        row = [self.tracker_row(tracker_serial, tracker_model)]
         if self.window is not None:
             self.window.extend_layout(self.window[KEY_LAYOUT_TRACKERS], row)
         else:
@@ -205,7 +205,7 @@ class GUIRenderer:
                                     'Serial (COM port)::SERIALCOM', 'Network (Server)::NETWORK']]
         self.layout.append([self.small_vertical_space()])
         self.layout.append([sg.Button("Refresh Tracker List", size=18, key=KEY_BTN_REFRESH),
-                            sg.ButtonMenu("Add External device", external_devices, key=KEY_BTN_ADD_EXTERNAL,
+                            sg.ButtonMenu("Add External device", external_devices, key=KEY_BTN_ADD_EXTERNAL, disabled=True,
                                           tooltip="Add an external feedback device"), ])
         self.layout.append([sg.HSep()])
         self.layout.append(
