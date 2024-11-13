@@ -25,7 +25,7 @@ def main():
 
     # Init GUI
     global gui
-    gui = GUIRenderer(config, pulse_test, restart_bridge_server, refresh_tracker_list)
+    gui = GUIRenderer(config, pulse_test, restart_bridge_server, refresh_tracker_list, add_external_target)
     print("[Main] GUI initialized")
 
     # Start the Server
@@ -75,11 +75,29 @@ def refresh_tracker_list():
         return
 
     for device in vr.query_devices():
-        gui.add_tracker(device.index, device.serial, device.model)
+        gui.add_tracker(device.serial, device.model)
 
     # Debug tracker (Uncomment this for debug purposes)
     # gui.add_tracker(99, "T35T-53R1AL", "Test Model 1.0")
     print("[Main] Tracker list refreshed")
+
+
+def add_external_target(external_type):
+    print(external_type)
+
+    sound_emu = "EMUSND"
+    text_emu = "EMUTXT"
+    serial_com = "SERIALCOM"
+    network = "NETWORK"
+
+    if external_type.endswith(sound_emu):
+        gui.add_external_device(sound_emu+"-1", "Sound Target")
+    if external_type.endswith(text_emu):
+        gui.add_external_device(text_emu+"-1", "Text Target")
+    if external_type.endswith(serial_com):
+        gui.add_external_device(serial_com+"-1", "Serial Target")
+    if external_type.endswith(network):
+        gui.add_external_device(network+"-1", "Network Target")
 
 
 def param_received(address, value):
@@ -98,6 +116,7 @@ if __name__ == '__main__':
         print(f"[Main][ERROR] {e}\n{traceback.format_exc()}")
         with open('hpb_crashlog.txt', "w+") as crash_log:
             import json
+
             json.dump(traceback.format_exc(), fp=crash_log)
     finally:
         # Shut down the processes
