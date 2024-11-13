@@ -12,6 +12,7 @@ vr: OpenVRTracker = None
 config: AppConfig = None
 gui: GUIRenderer = None
 
+supported_models = ["VIVE Tracker 3.0 MV"]
 
 def main():
     print(f"[Main] Using Python: {platform.python_version()}")
@@ -75,6 +76,8 @@ def refresh_tracker_list():
         return
 
     for device in vr.query_devices():
+        if device.model not in supported_models:
+            continue
         gui.add_tracker(device.index, device.serial, device.model)
 
     # Debug tracker (Uncomment this for debug purposes)
