@@ -23,11 +23,11 @@ Curious about the development? Have any questions? Join the discord!
 - Can I put the tracker elsewhere after setting up my avatar?
    - Yes. None of the trackers are permanently linked to any parts of your avatar. In fact you can even hotswap them. Just ensure you are using the right parameters in the bridge app. 
 - How does this work with non-Vive trackers?
-   - The software side support is guaranteed by the Haptic Pancake Bridge app. Every SteamVR compatible tracker is supported and external device support is imminent.
+   - The software side support is guaranteed by the Haptic Pancake Bridge app. Every SteamVR compatible tracker will be recognized and external device support is imminent.
    - The hardware side is a bit more complicated:
-    - For Tundra trackers you will need a custom PCB from here: [Tundra Tapper](https://github.com/nkotech/Tundra-Tapper)
-    - Controllers that has been re-programmed into trackers will work as they have haptics built in.
-    - Anything else should only work if the hardware respects the SteamVR api and has build in haptics or IO to attach one.
+       - For Tundra trackers you will need a custom PCB from here: [Tundra Tapper](https://github.com/nkotech/Tundra-Tapper)
+       - Controllers that has been re-programmed into trackers will work as they have haptics built in.
+       - Anything else should only work if the hardware respects the SteamVR api and has build in haptics or IO to attach one.
 
 # Support the project
 <a href='https://ko-fi.com/Z4urce' target='_blank'><img height='35' style='border:0px;height:46px;' src='https://az743702.vo.msecnd.net/cdn/kofi3.png?v=0' border='0' alt='Buy Me a Coffee at ko-fi.com' />
