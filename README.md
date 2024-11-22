@@ -26,8 +26,8 @@ Curious about the development? Have any questions? Join the discord!
    - The software side support is guaranteed by the Haptic Pancake Bridge app. Every SteamVR compatible tracker will be recognized and external device support is imminent.
    - The hardware side is a bit more complicated:
        - For Tundra trackers you will need a custom PCB from here: [Tundra Tapper](https://github.com/nkotech/Tundra-Tapper)
-       - Controllers that has been re-programmed into trackers will work as they have haptics built in.
-       - Anything else should only work if the hardware respects the SteamVR api and has build in haptics or IO to attach one.
+       - Controllers that has been re-programmed into trackers will just work as they have haptics built in.
+       - Anything else should only work if the hardware respects the SteamVR api and has built in haptics or IO to attach one.
 
 # Support the project
 <a href='https://ko-fi.com/Z4urce' target='_blank'><img height='35' style='border:0px;height:46px;' src='https://az743702.vo.msecnd.net/cdn/kofi3.png?v=0' border='0' alt='Buy Me a Coffee at ko-fi.com' />
