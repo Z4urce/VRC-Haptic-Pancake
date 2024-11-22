@@ -22,6 +22,8 @@ Curious about the development? Have any questions? Join the discord!
    - Since I implemented the vibration pattern system, it barely affects the tracking. But it still depends on the selected pattern. For example You should experience minor to no drifting with the 'Linear' one.
 - Can I put the tracker elsewhere after setting up my avatar?
    - Yes. None of the trackers are permanently linked to any parts of your avatar. In fact you can even hotswap them. Just ensure you are using the right parameters in the bridge app. 
+- Does this work with tundra tracker or other trackers?
+   - The bridge app software supports every tracker. But you will need a custom PCB for tundra trackers. Find it here: [Tundra Tapper](https://github.com/nkotech/Tundra-Tapper)
 
 # Support the project
 <a href='https://ko-fi.com/Z4urce' target='_blank'><img height='35' style='border:0px;height:46px;' src='https://az743702.vo.msecnd.net/cdn/kofi3.png?v=0' border='0' alt='Buy Me a Coffee at ko-fi.com' />
