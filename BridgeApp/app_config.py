@@ -32,10 +32,21 @@ class VRTracker:
 class TrackerConfig(BaseModel):
     # serial: str
     enabled: bool = True  # Not yet used
-    address: str = "/avatar/parameters/..."
+    address: str = "" # Deprecated
+    address_list: List[str] = []
     multiplier_override: float = 1.0
     pattern_override: str = "None"
     battery_threshold: int = 20
+    
+    def get_address_str(self):
+        if len(self.address_list) == 0:
+            self.address_list.append("/avatar/parameters/...")
+        
+        result = ";".join(self.address_list)
+        return result
+    
+    def set_address(self, value):
+        self.address_list = value.split(';')
 
     def set_vibration_multiplier(self, value):
         if value is None:
@@ -69,7 +80,7 @@ class PatternConfig(BaseModel):
 
 
 class AppConfig(BaseModel):
-    version: int = 1
+    version: int = 2
     server_type: int = 0
     server_ip: str = "127.0.0.1"
     server_port: int = 9001
@@ -94,6 +105,11 @@ class AppConfig(BaseModel):
             new_config.address = self.tracker_to_osc[key]
             self.tracker_config_dict[key] = new_config
         self.tracker_to_osc.clear()
+        
+        for serial, tracker_config in self.tracker_config_dict.items():
+            if tracker_config.address:
+                tracker_config.set_address(tracker_config.address)
+                tracker_config.address = ''
 
     def init_pattern_config(self):
         self.pattern_config_list.clear()

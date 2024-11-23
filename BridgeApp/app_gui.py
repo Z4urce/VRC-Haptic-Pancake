@@ -4,7 +4,7 @@ import webbrowser
 from app_config import AppConfig, PatternConfig
 from app_pattern import VibrationPattern
 
-WINDOW_NAME = "Haptic Pancake Bridge v0.6.0a"
+WINDOW_NAME = "Haptic Pancake Bridge v0.7.0a"
 
 LIST_SERVER_TYPE = ["OSC (VRChat)", "WebSocket (Resonite)"]
 
@@ -45,9 +45,10 @@ class GUIRenderer:
         self.config = app_config
         self.shutting_down = False
         self.window = None
+        self.layout_dirty = False
         self.trackers = []
         self.osc_status_bar = sg.Text('', key=KEY_OSC_STATUS_BAR)
-        self.tracker_frame = sg.Column([], key=KEY_LAYOUT_TRACKERS)
+        self.tracker_frame = sg.Column([], key=KEY_LAYOUT_TRACKERS, scrollable=True, vertical_scroll_only=True, expand_y=True, size=(406,270))
         self.layout = []
         self.build_layout()
 
@@ -111,7 +112,7 @@ class GUIRenderer:
         string = f"{icon} {tracker_serial} {tracker_model}"
 
         dev_config = self.config.get_tracker_config(tracker_serial)
-        address = dev_config.address
+        address = dev_config.get_address_str()
         vib_multiplier = dev_config.multiplier_override
         battery_threshold = dev_config.battery_threshold
 
@@ -188,11 +189,12 @@ class GUIRenderer:
             print(f"[GUI] Tracker {tracker_serial} is already on the list. Skipping...")
             return
 
-        row = [self.tracker_row(tracker_serial, tracker_model)]
+        # row = [self.tracker_row(tracker_serial, tracker_model)]
         if self.window is not None:
-            self.window.extend_layout(self.window[KEY_LAYOUT_TRACKERS], row)
+            self.window.extend_layout(self.tracker_frame, layout)
+            self.refresh()
         else:
-            self.tracker_frame.layout(row)
+            self.tracker_frame.layout(layout)
 
         self.trackers.append(tracker_serial)
 
@@ -209,7 +211,7 @@ class GUIRenderer:
                                           tooltip="Add an external feedback device"), ])
         self.layout.append([sg.HSep()])
         self.layout.append(
-            [sg.Text("Made by Z4urce", enable_events=True, font='Default 8 underline', key=KEY_OPEN_URL)])
+            [sg.Text("Made by Zelus (Z4urce)", enable_events=True, font='Default 8 underline', key=KEY_OPEN_URL), sg.Sizegrip()])
 
     def update_osc_status_bar(self, message, is_error=False):
         text_color = 'red' if is_error else 'green'
@@ -223,15 +225,31 @@ class GUIRenderer:
             except Exception as e:
                 print("[GUI] Failed to update server status bar.")
 
+    def refresh(self):
+        self.tracker_frame.contents_changed()
+        self.tracker_frame.set_vscroll_position(1)
+        self.window.refresh()
+        self.layout_dirty = True
+
     def run(self):
         if self.window is None:
-            self.window = sg.Window(WINDOW_NAME, self.layout)
+            self.window = sg.Window(WINDOW_NAME, self.layout, keep_on_top=False, finalize=True, alpha_channel=0.9, icon=b'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpVIrDhYVcchQnezgB+JYqlgEC6Wt0KqDyaVf0KQhSXFxFFwLDn4sVh1cnHV1cBUEwQ8QZwcnRRcp8X9NoUWMB8f9eHfvcfcOEOplpppdEUDVLCMZi4qZ7Kroe0UvBjEEPyYlZurx1GIaruPrHh6+3oV5lvu5P0efkjMZ4BGJI0w3LOIN4tlNS+e8TxxkRUkhPieeMOiCxI9clx1+41xossAzg0Y6OU8cJBYLHSx3MCsaKvEMcUhRNcoXMg4rnLc4q+Uqa92TvzCQ01ZSXKc5ihiWEEcCImRUUUIZFsK0aqSYSNJ+1MU/0vQnyCWTqwRGjgVUoEJq+sH/4He3Zn56ykkKRIHuF9v+GAN8u0CjZtvfx7bdOAG8z8CV1vZX6sDcJ+m1thY6Avq3gYvrtibvAZc7wPCTLhlSU/LSFPJ54P2MvikLDNwC/jWnt9Y+Th+ANHW1fAMcHALjBcped3l3T2dv/55p9fcD3S9y0apk9h0AAAAGYktHRAD/AP8A/6C9p5MAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfoCxYXCzDoJVaPAAACuElEQVQ4y2WTTW8bdRDGfzO767f1xnGcJiSNVNoKqMoJgRBCwifuIHFFuSDRTwDi2CNfgC/gGxfElV6ockEISAJBiAJ5KVnqxk7idbx+ie39DwcngaqH0Wj0HJ756ZmRjz7940Ym0nCe1DMVnArZRbn/d+85bcMJ6744GqrUzYFimIAamMF5P8GCAC1GqAMDlFk3qItKQ9WsrmaoGd32LjYeMeg0edj4mOP9Hzj4/ku2v77PJO3MtPZj1GYmYlb31c1ch2ct5uZW6XZikpN9Rr02v377BenRNsuvvkfa2sUP5wlKFbJhDy1FmAm+GpiD6XkfRFGDfD7infc/p9XcobTwGbmoRpq2sKBI8VqNXjemUCijAr6YXa2kCL74RHOrEORYufkW5vk4haJlOAQFyDLUAAeqzhBn5IOQwMsxGfUo5MqMBwm++IjLmPQTovk1PFFGyVPCygpqhphdIBiUS4t0zg5ZWrqL84RcWL2KraTgVPEWb5KmLQIvT+bsWYThIKF1+BO9XpPDg+9YufU2raPfqCy/zOnJHvlyFcmVyMhYq65h/yGAOGA64cmjBxzHW/Tbf5Ec/c5Z6xFh+RphtESvfUAn3mFh+Q5yEbuYoZc3oAbVxZc4T2KiuRcYnP7N3dc/JCzVZjpGLiiyv/kVl6bqDPnk3o51ksc0n25SrFwn85TxdIRXiBi7Mc5Tpm5CYX6F5uGP5Mo1BoMON974AK8YzRCycUpn9yHd5i9M0xO6/2xzGm9ynsSEpRrZ8Ixee4+9b+5TrqzSP96buV8ieA5eefMeMh7Re/IzleqLyGSEOkcn3iKJt+i3/qR2612GpzGlcBFPfdSBL8bG/MLtulMhfO06mQoWBLMIRXCesnZn+sxnLtkUTzww2/AxWw+8fMOJ1NUv4Lzn39lXIVOu5kAFJ7rhnK3/C07bcJ2GHOyzAAAAAElFTkSuQmCC')
+            self.window.set_resizable(False, True)
 
+        # Update Layout if it's changed.
+        if self.layout_dirty:
+            self.refresh()
+            print('Refreshing layout...')
+        
+        # We make sure the layout update is called only when it's changed.
+        self.layout_dirty = False
+
+        # This is the main GUI loop. The code will halt here until the next event.
         event, values = self.window.read()
 
         # Update Values
         self.update_values(values)
-
+        
         # React to Event
         if event == sg.WIN_CLOSED or event == 'Exit':  # if user closes window or clicks cancel
             self.shutting_down = True
@@ -246,7 +264,7 @@ class GUIRenderer:
         if event == KEY_BTN_REFRESH:
             self.refresh_trackers_event()
         if event == KEY_OPEN_URL:
-            webbrowser.open("https://github.com/Z4urce/VRC-Haptic-Pancake")
+            webbrowser.open("https://hapticpancake.com/")
 
         return True
 
@@ -272,7 +290,7 @@ class GUIRenderer:
         # Update Tracker OSC Addresses
         key = (KEY_OSC_ADDRESS, tracker)
         if key in values:
-            self.config.get_tracker_config(tracker).address = values[key]
+            self.config.get_tracker_config(tracker).set_address(values[key])
 
         # Update Tracker vibration
         key = (KEY_VIB_STR_OVERRIDE, tracker)
