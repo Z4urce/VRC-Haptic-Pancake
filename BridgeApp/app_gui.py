@@ -4,7 +4,7 @@ import webbrowser
 from app_config import AppConfig, PatternConfig
 from app_pattern import VibrationPattern
 
-WINDOW_NAME = "Haptic Pancake Bridge v0.7.0a"
+WINDOW_NAME = "Haptic Pancake Bridge v0.8.0a"
 
 LIST_SERVER_TYPE = ["OSC (VRChat)", "WebSocket (Resonite)"]
 
@@ -76,7 +76,7 @@ class GUIRenderer:
             [sg.Text('Haptic settings:', font='_ 14')],
             [proximity_frame, velocity_frame],
             [self.small_vertical_space()],
-            [sg.Text('Trackers found:', font='_ 14')],
+            [sg.Text('Devices:', font='_ 14')],
             [self.tracker_frame],
         ]
 
@@ -105,11 +105,11 @@ class GUIRenderer:
     def small_vertical_space():
         return sg.Text('', font=('AnyFont', 1), auto_size_text=True)
 
-    def device_row(self, tracker_serial, tracker_model, additional_layout, icon=None):
+    def device_row(self, tracker_serial, tracker_model, additional_layout, icon=None, color=None):
         if icon is None:
             icon = "⚫"
 
-        string = f"{icon} {tracker_serial} {tracker_model}"
+        string = f"{tracker_serial} {tracker_model}"
 
         dev_config = self.config.get_tracker_config(tracker_serial)
         address = dev_config.get_address_str()
@@ -120,7 +120,7 @@ class GUIRenderer:
 
         print(f"[GUI] Adding tracker: {string}")
         layout = [
-            [sg.Text(string, pad=(0, 0))],
+            [sg.Checkbox('', default=True, pad=0), sg.Text(icon, text_color=color, pad=0), sg.Text(string, pad=(0, 0))],
             [sg.Text(" "), sg.Text("Address:"),
              sg.InputText(address, k=(KEY_OSC_ADDRESS, tracker_serial),
                           enable_events=True, size=35,
@@ -132,7 +132,7 @@ class GUIRenderer:
         row = [sg.pin(sg.Col(layout, key=('-ROW-', tracker_serial)))]
         return row
 
-    def tracker_row(self, tracker_serial, tracker_model):
+    def tracker_row(self, tracker_serial, tracker_model, color=None):
         dev_config = self.config.get_tracker_config(tracker_serial)
         vib_multiplier = dev_config.multiplier_override
         battery_threshold = dev_config.battery_threshold
@@ -149,10 +149,10 @@ class GUIRenderer:
                            size=4, tooltip=multiplier_tooltip),
               sg.Button("Calibrate", button_color='grey', disabled=True, key=(KEY_BTN_CALIBRATE, tracker_serial),
                         tooltip="Coming soon...")]
-        return self.device_row(tracker_serial, tracker_model, tr)
+        return self.device_row(tracker_serial, tracker_model, tr, color=color)
 
-    def add_tracker(self, tracker_serial, tracker_model):
-        row = [self.tracker_row(tracker_serial, tracker_model)]
+    def add_tracker(self, tracker_serial, tracker_model, is_online=False):
+        row = [self.tracker_row(tracker_serial, tracker_model, color="green" if is_online else "red")]
         self.add_target(tracker_serial, tracker_model, row)
 
     def add_external_device(self, device_serial, device_model):

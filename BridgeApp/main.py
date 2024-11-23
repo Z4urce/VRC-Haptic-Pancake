@@ -76,7 +76,10 @@ def refresh_tracker_list():
         return
 
     for device in vr.query_devices():
-        gui.add_tracker(device.serial, device.model)
+        gui.add_tracker(device.serial, device.model, True)
+        
+    for serial, tracker_config in config.tracker_config_dict.items():
+        gui.add_tracker(serial, "- OFFLINE", False)
 
     # Debug tracker (Uncomment this for debug purposes)
     # gui.add_tracker("T35T-53R1AL", "Test Model 1.0")
