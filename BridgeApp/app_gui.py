@@ -35,7 +35,7 @@ KEY_VIB_SPEED = '-VIB-SPD-'
 
 # Background refresh
 KEY_TIMER_REFRESH = '-TIMER-REFRESH-'
-TIMER_REFRESH_MS = 30 * 1000
+TIMER_REFRESH_MS = 10 * 1000
 
 class GUIRenderer:
     def __init__(self, app_config: AppConfig, tracker_test_event,

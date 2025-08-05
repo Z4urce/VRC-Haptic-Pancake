@@ -30,7 +30,17 @@ Curious about the development? Have any questions? Join the discord!
        - Anything else should only work if the hardware respects the SteamVR api and has built in haptics or IO to attach one.
 
 # Support the project
-<a href='https://ko-fi.com/Z4urce' target='_blank'><img height='35' style='border:0px;height:46px;' src='https://az743702.vo.msecnd.net/cdn/kofi3.png?v=0' border='0' alt='Buy Me a Coffee at ko-fi.com' />
+<a href='https://ko-fi.com/Z4urce' target='_blank'><img height='35' style='border:0px;height:46px;' src='https://az743702.vo.msecnd.net/cdn/kofi3.png?v=0' border='0' alt='Buy Me a Coffee at ko-fi.com' />  </a>
+
+# Contributing to the software
+
+## License
+This software is under the [GNU General Public License](LICENSE)
+
+## Building the software yourself
+If you want to build the software yourself, simply clone the repo, run `pip install -r BridgeApp\requirements.txt`, run `pip install pyinstaller`, then just run `.\build.bat` to build the app.  
+
+The resulting windows binary will be at `dist\hapticpancake.exe`
 
 # Special Thanks
 - @BubblegumFoxxo (For helping in the testing and debugging)
