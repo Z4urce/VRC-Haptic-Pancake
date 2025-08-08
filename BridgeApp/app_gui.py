@@ -23,6 +23,7 @@ KEY_BTN_TEST = '-BTN-TEST-'
 KEY_BTN_CALIBRATE = '-BTN-CALIBRATE-'
 KEY_BTN_ADD_EXTERNAL = '-BTN-ADD-EXTERNAL-'
 KEY_BATTERY_THRESHOLD = '-BATTERY-'
+KEY_START_WITH_STEAMVR = '-START-WITH-STEAMVR-'
 
 # Pattern Config
 KEY_PROXIMITY = '-PROXY-'
@@ -39,12 +40,13 @@ TIMER_REFRESH_MS = 10 * 1000
 
 class GUIRenderer:
     def __init__(self, app_config: AppConfig, tracker_test_event,
-                 restart_osc_event, refresh_trackers_event, add_external_event):
+                 restart_osc_event, refresh_trackers_event, add_external_event, setup_autostart_event):
         sg.theme('DarkAmber')
         self.tracker_test_event = tracker_test_event
         self.restart_osc_event = restart_osc_event
         self.refresh_trackers_event = refresh_trackers_event
         self.add_external_event = add_external_event
+        self.setup_autostart_event = setup_autostart_event
 
         self.config = app_config
         self.shutting_down = False
@@ -68,6 +70,8 @@ class GUIRenderer:
                                       self.config.pattern_config_list[VibrationPattern.VELOCITY]))
 
         self.layout = [
+            [sg.Text('App settings:', font='_ 14')],
+            [sg.Checkbox("Start with SteamVR", default=self.config.start_with_steamvr, key=KEY_START_WITH_STEAMVR, enable_events=True)],
             [sg.Text('Bridge settings:', font='_ 14')],
             [sg.Text("Server Type:"),
              sg.InputCombo(LIST_SERVER_TYPE, LIST_SERVER_TYPE[self.config.server_type], key=KEY_SERVER_TYPE)],
@@ -302,6 +306,12 @@ class GUIRenderer:
 
         for tracker in self.trackers:
             self.update_tracker_config(values, tracker)
+
+        # Update app settings
+        old_start_with_steamvr = self.config.start_with_steamvr
+        self.config.start_with_steamvr = values[KEY_START_WITH_STEAMVR]
+        if old_start_with_steamvr != self.config.start_with_steamvr:
+            self.setup_autostart_event(self.config.start_with_steamvr)
 
         # Update OSC Addresses
         self.config.server_type = LIST_SERVER_TYPE.index(values[KEY_SERVER_TYPE])

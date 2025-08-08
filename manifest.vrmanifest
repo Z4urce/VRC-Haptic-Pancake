@@ -1,0 +1,16 @@
+{
+	"source" : "builtin",
+	"applications": [{
+		"app_key": "hapticpancake",
+		"launch_type": "binary",
+		"binary_path_windows": "hapticpancake.exe",
+		"is_dashboard_overlay": true,
+
+		"strings": {
+			"en_us": {
+				"name": "Haptic Pancake Bridge",
+				"description": "Bridge software to enable haptic feedback on trackers in VRChat and Resonite"
+			}
+		}
+	}]
+}

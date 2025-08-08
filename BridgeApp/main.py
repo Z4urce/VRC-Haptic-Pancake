@@ -3,12 +3,12 @@ from app_gui import GUIRenderer
 from server_base import ServerBase
 from server_osc import VRChatOSCReceiver
 from server_websocket import ResoniteWebSocketServer
-from target_ovr import OpenVRTracker
+from target_ovr import OpenVRHandler
 import traceback
 import platform
 
 bridge_server: ServerBase = None
-vr: OpenVRTracker = None
+vr: OpenVRHandler = None
 config: AppConfig = None
 gui: GUIRenderer = None
 external_id: int = 0
@@ -26,7 +26,7 @@ def main():
 
     # Init GUI
     global gui
-    gui = GUIRenderer(config, pulse_test, restart_bridge_server, refresh_tracker_list, add_external_target)
+    gui = GUIRenderer(config, pulse_test, restart_bridge_server, refresh_tracker_list, add_external_target, setup_autostart)
     print("[Main] GUI initialized")
 
     # Start the Server
@@ -36,7 +36,7 @@ def main():
 
     # Init OpenVR
     global vr
-    vr = OpenVRTracker(config)
+    vr = OpenVRHandler(config)
 
     # Add trackers to GUI
     refresh_tracker_list()
@@ -118,6 +118,8 @@ def param_received(address, value):
         if  address in tracker_config.address_list:
             vr.set_strength(serial, value)
 
+def setup_autostart(autostart: bool):
+    vr.setup_autostart(autostart=autostart)
 
 if __name__ == '__main__':
     try:

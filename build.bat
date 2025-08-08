@@ -1,1 +1,2 @@
 pyinstaller -wF --collect-all openvr --name hapticpancake --icon=Images\icon.ico BridgeApp/main.py
+copy "manifest.vrmanifest" "dist\manifest.vrmanifest"

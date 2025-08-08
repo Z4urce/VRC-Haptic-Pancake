@@ -2,9 +2,12 @@ import openvr
 from app_runner import FeedbackThread
 from app_config import VRTracker, AppConfig
 from typing import List, Dict
+import os
 
+class OpenVRHandler:
+    manifest_path = "manifest.vrmanifest"
+    manifest_app_key = "hapticpancake"
 
-class OpenVRTracker:
     def __init__(self, config: AppConfig):
         self.devices: List[VRTracker] = []
         self.vibration_managers: Dict[str, FeedbackThread] = {}
@@ -80,3 +83,25 @@ class OpenVRTracker:
     def __pulse(self, index, pulse_length: int = 200):
         if self.is_alive():
             self.vr.triggerHapticPulse(index, 0, pulse_length)
+
+    def setup_autostart(self, autostart: bool):
+        if not self.try_init_openvr(False):
+            return
+        
+        absolute_manifest_path = os.path.join(os.getcwd(), self.manifest_path)
+        apps = openvr.VRApplications()
+        currently_installed = apps.isApplicationInstalled(self.manifest_app_key)
+
+        if autostart:
+            if not currently_installed: 
+                print(f"[OpenVRHandler] Installing vrmanifest {absolute_manifest_path}")
+                apps.addApplicationManifest(absolute_manifest_path, False)
+            if not apps.getApplicationAutoLaunch(self.manifest_app_key):
+                    print("[OpenVRHandler] Enabling auto launch")
+                    apps.setApplicationAutoLaunch(self.manifest_app_key, True)
+        else:
+            if currently_installed:
+                if apps.getApplicationAutoLaunch(self.manifest_app_key):
+                    print("[OpenVRHandler] Disabling auto launch")
+                    apps.setApplicationAutoLaunch(self.manifest_app_key, False)
+                    
