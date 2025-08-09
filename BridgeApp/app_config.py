@@ -81,12 +81,12 @@ class PatternConfig(BaseModel):
 
 class AppConfig(BaseModel):
     version: int = 2
+    start_with_steamvr: bool = False
     server_type: int = 0
     server_ip: str = "127.0.0.1"
     server_port: int = 9001
     pattern_config_list: List[PatternConfig] = []
     tracker_config_dict: Dict[str, TrackerConfig] = {}
-    start_with_steamvr: bool = False
 
     # OBSOLETE - Will delete these in the next version
     tracker_to_osc: Dict[str, str] = {}

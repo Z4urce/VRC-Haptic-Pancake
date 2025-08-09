@@ -24,6 +24,7 @@ KEY_BTN_CALIBRATE = '-BTN-CALIBRATE-'
 KEY_BTN_ADD_EXTERNAL = '-BTN-ADD-EXTERNAL-'
 KEY_BATTERY_THRESHOLD = '-BATTERY-'
 KEY_START_WITH_STEAMVR = '-START-WITH-STEAMVR-'
+KEY_AUTOSTART_STATUS_BAR = '-AUTOSTART-STATUS-BAR-'
 
 # Pattern Config
 KEY_PROXIMITY = '-PROXY-'
@@ -40,11 +41,13 @@ TIMER_REFRESH_MS = 10 * 1000
 
 class GUIRenderer:
     def __init__(self, app_config: AppConfig, tracker_test_event,
-                 restart_osc_event, refresh_trackers_event, add_external_event, setup_autostart_event):
+                 restart_osc_event, refresh_vr_event, add_external_event, setup_autostart_event):
         sg.theme('DarkAmber')
+        self.theme_color_bad = "red"
+        self.theme_color_good = "lime"
         self.tracker_test_event = tracker_test_event
         self.restart_osc_event = restart_osc_event
-        self.refresh_trackers_event = refresh_trackers_event
+        self.refresh_vr_event = refresh_vr_event
         self.add_external_event = add_external_event
         self.setup_autostart_event = setup_autostart_event
 
@@ -53,9 +56,11 @@ class GUIRenderer:
         self.window = None
         self.layout_dirty = False
         self.trackers = []
+        self.autostart_chkbox = sg.Checkbox("Start with SteamVR", default=self.config.start_with_steamvr, key=KEY_START_WITH_STEAMVR, enable_events=True, tooltip="Open Haptic Pancake Bridge when opening SteamVR.")
+        self.autostart_status_bar = sg.Text('', key=KEY_AUTOSTART_STATUS_BAR)
         self.osc_status_bar = sg.Text('', key=KEY_OSC_STATUS_BAR)
         self.tracker_status_bar = sg.Text('', key=KEY_TRACKER_STATUS_BAR, font='_ 14')
-        self.tracker_frame = sg.Column([], key=KEY_LAYOUT_TRACKERS, scrollable=True, vertical_scroll_only=True, expand_y=True, size=(406,270))
+        self.tracker_frame = sg.Column([], key=KEY_LAYOUT_TRACKERS, scrollable=True, vertical_scroll_only=True, expand_y=True, expand_x = True, size=(400,120))
         self.layout = []
         self.build_layout()
 
@@ -69,24 +74,31 @@ class GUIRenderer:
                                       KEY_VELOCITY, VibrationPattern.VIB_PATTERN_LIST,
                                       self.config.pattern_config_list[VibrationPattern.VELOCITY]))
 
+        external_devices = ['Add', ['Emulated (Sound)::EMUSND', 'Emulated (Text)::EMUTXT',
+                                    'Serial (COM port)::SERIALCOM', 'Network (Server)::NETWORK']]
+        add_external_button = sg.ButtonMenu("Add External device", external_devices, key=KEY_BTN_ADD_EXTERNAL, disabled=True,
+                                            tooltip="Add an external feedback device")
+
         self.layout = [
             [sg.Text('App settings:', font='_ 14')],
-            [sg.Checkbox("Start with SteamVR", default=self.config.start_with_steamvr, key=KEY_START_WITH_STEAMVR, enable_events=True)],
-            [sg.Text('Bridge settings:', font='_ 14')],
-            [sg.Text("Server Type:"),
-             sg.InputCombo(LIST_SERVER_TYPE, LIST_SERVER_TYPE[self.config.server_type], key=KEY_SERVER_TYPE)],
-            [sg.Text("Address:", size=9),
-             sg.InputText(self.config.server_ip, k=KEY_REC_IP, size=16, tooltip="IP Address. Default is 127.0.0.1"),
+            [self.autostart_chkbox, sg.Push(), self.autostart_status_bar],
+            [sg.Text('Server settings:', font='_ 14')],
+            [sg.Text("Type:", justification='right', size=7),
+             sg.InputCombo(LIST_SERVER_TYPE, LIST_SERVER_TYPE[self.config.server_type], key=KEY_SERVER_TYPE, readonly=True)],
+            [sg.Text("Address:", justification='right', size=7),
+             sg.InputText(self.config.server_ip, k=KEY_REC_IP, size=23, tooltip="IP Address. Default is 127.0.0.1"),
              sg.Text("Port:", tooltip="UDP Port. Default is 9001"),
              sg.InputText(self.config.server_port, key=KEY_REC_PORT, size=13),
+             sg.Push(),
              sg.Button("Apply", key=KEY_BTN_APPLY, tooltip="Apply and restart server.")],
-            [sg.Text("Server status:"), self.osc_status_bar],
-            [self.small_vertical_space()],
+            [sg.Text("Status:", justification='right', size=7), self.osc_status_bar],
             [sg.Text('Haptic settings:', font='_ 14')],
-            [proximity_frame, velocity_frame],
+            [sg.Push(), proximity_frame, velocity_frame, sg.Push()],
             [self.small_vertical_space()],
-            [sg.Text('Devices:', font='_ 14'), self.tracker_status_bar],
+            [sg.Text('Devices:', font='_ 14'), self.tracker_status_bar, sg.Push(), sg.Button("Refresh", key=KEY_BTN_REFRESH), add_external_button],
             [self.tracker_frame],
+            [sg.HSep()],
+            [sg.Text("Made by BIT FOX DEN / Zelus", enable_events=True, font='Default 8 underline', key=KEY_OPEN_URL), sg.Sizegrip()],
         ]
 
     @staticmethod
@@ -95,18 +107,18 @@ class GUIRenderer:
         pattern_tooltip = VibrationPattern.VIB_PATTERN_TOOLTIP
 
         return [
-            [sg.Text("Pattern:", tooltip=pattern_tooltip),
+            [sg.Text("Pattern:", justification='right', size=8, tooltip=pattern_tooltip),
              sg.Drop(pattern_list, pattern_config.pattern, tooltip=pattern_tooltip,
-                     k=key + KEY_VIB_PATTERN, size=15, readonly=True, enable_events=True)],
-            [sg.Text("Strength:"),
-             sg.Text("Min:", pad=0),
-             sg.Spin([num for num in range(0, 101)], pattern_config.str_min, pad=0,
+                     k=key + KEY_VIB_PATTERN, size=17, readonly=True, enable_events=True)],
+            [sg.Text("Strength:", justification='right', size=8),
+             sg.Text("Min:", pad=((3,0),(0,0))),
+             sg.Spin([num for num in range(0, 101)], pattern_config.str_min, size=3, pad=((0,3),(0,0)),
                      key=key + KEY_VIB_STR_MIN, enable_events=True),
              sg.Text("Max:", pad=0),
-             sg.Spin([num for num in range(0, 101)], pattern_config.str_max, pad=0,
+             sg.Spin([num for num in range(0, 101)], pattern_config.str_max, size=3, pad=((0,3),(0,0)),
                      key=key + KEY_VIB_STR_MAX, enable_events=True)],
-            [sg.Text("Speed:", size=6, tooltip=speed_tooltip),
-             sg.Slider(range=(1, 32), size=(13, 10), default_value=pattern_config.speed, tooltip=speed_tooltip,
+            [sg.Text("Speed:", justification='right', size=8, tooltip=speed_tooltip),
+             sg.Slider(range=(1, 32), size=(15, 10), default_value=pattern_config.speed, tooltip=speed_tooltip,
                        orientation='horizontal', key=key + KEY_VIB_SPEED, enable_events=True)],
         ]
 
@@ -130,10 +142,10 @@ class GUIRenderer:
         if not quiet_refresh:
             print(f"[GUI] Adding tracker: {string}")
         layout = [
-            [sg.Checkbox('', default=True, pad=0), sg.Text(icon, text_color=color, pad=0), sg.Text(string, pad=(0, 0))],
+            [sg.Checkbox('', default=True, disabled=True, pad=0), sg.Text(icon, text_color=color, pad=0), sg.Text(string, pad=(0, 0))],
             [sg.Text(" "), sg.Text("Address:"),
              sg.InputText(address, k=(KEY_OSC_ADDRESS, tracker_serial),
-                          enable_events=True, size=35,
+                          enable_events=True, size=36,
                           tooltip="OSC Address or Resonite Address"),
              sg.Button("Identify", k=(KEY_BTN_TEST, tracker_serial),
                        tooltip="Send a 500ms pulse to the tracker")],
@@ -150,7 +162,7 @@ class GUIRenderer:
 
         tr = [sg.Text(" "),
               sg.Text("Battery threshold:", tooltip="Disables vibration bellow this battery level"),
-              sg.Spin([num for num in range(0, 90)], battery_threshold, pad=0,
+              sg.Spin([num for num in range(0, 90)], battery_threshold, size=3, pad=0,
                       key=(KEY_BATTERY_THRESHOLD, tracker_serial), enable_events=True),
               sg.Text("%", pad=0),
               sg.VSeparator(),
@@ -162,7 +174,7 @@ class GUIRenderer:
         return self.device_row(tracker_serial, tracker_model, tr, color=color, quiet_refresh=quiet_refresh)
 
     def add_tracker(self, tracker_serial, tracker_model, is_online=False, quiet_refresh=False):
-        row = [self.tracker_row(tracker_serial, tracker_model, color="green" if is_online else "red", quiet_refresh=quiet_refresh)]
+        row = [self.tracker_row(tracker_serial, tracker_model, color=self.theme_color_good if is_online else self.theme_color_bad, quiet_refresh=quiet_refresh)]
         self.add_target(tracker_serial, tracker_model, row, quiet_refresh)
 
     def add_external_device(self, device_serial, device_model):
@@ -211,21 +223,10 @@ class GUIRenderer:
 
     def add_message(self, message):
         self.layout.append([sg.HSep()])
-        self.layout.append([sg.Text(message, text_color='red')])
-
-    def add_footer(self):
-        external_devices = ['Add', ['Emulated (Sound)::EMUSND', 'Emulated (Text)::EMUTXT',
-                                    'Serial (COM port)::SERIALCOM', 'Network (Server)::NETWORK']]
-        self.layout.append([self.small_vertical_space()])
-        self.layout.append([sg.Button("Refresh Tracker List", size=18, key=KEY_BTN_REFRESH),
-                            sg.ButtonMenu("Add External device", external_devices, key=KEY_BTN_ADD_EXTERNAL, disabled=True,
-                                          tooltip="Add an external feedback device"), ])
-        self.layout.append([sg.HSep()])
-        self.layout.append(
-            [sg.Text("Made by Zelus (Z4urce)", enable_events=True, font='Default 8 underline', key=KEY_OPEN_URL), sg.Sizegrip()])
+        self.layout.append([sg.Text(message, text_color=self.theme_color_bad)])
 
     def update_osc_status_bar(self, message, is_error=False):
-        text_color = 'red' if is_error else 'green'
+        text_color = self.theme_color_bad if is_error else self.theme_color_good
         if self.window is None:
             self.osc_status_bar.DisplayText = message
             self.osc_status_bar.TextColor = text_color
@@ -250,6 +251,39 @@ class GUIRenderer:
             except Exception as e:
                 print("[GUI] Failed to update tracker status bar.")
 
+    def update_autostart_active(self, autolaunch_enabled):
+        if self.window is None:
+            self.autostart_chkbox.Value = autolaunch_enabled
+            return
+        if not self.shutting_down:
+            try:
+                self.autostart_chkbox.update(autolaunch_enabled)
+            except Exception as e:
+                print("[GUI] Failed to update autostart checkbox.")
+
+    def update_autostart_status(self, vr_ready, is_bundled):
+        if not vr_ready:
+            unavailable = True
+            message = "SteamVR closed (open to apply changes)"
+        elif not is_bundled:
+            unavailable = False
+            message = "SteamVR running (app unbundled)"
+        else:
+            unavailable = False
+            message = "SteamVR running"
+
+        text_color = self.theme_color_bad if unavailable else self.theme_color_good
+
+        if self.window is None:
+            self.autostart_status_bar.DisplayText = message
+            self.autostart_status_bar.TextColor = text_color
+            return
+        if not self.shutting_down:
+            try:
+                self.autostart_status_bar.update(message, text_color=text_color)
+            except Exception as e:
+                print("[GUI] Failed to update autostart status bar.")
+
     def refresh(self):
         self.tracker_frame.contents_changed()
         self.tracker_frame.set_vscroll_position(1)
@@ -260,6 +294,10 @@ class GUIRenderer:
         if self.window is None:
             self.window = sg.Window(WINDOW_NAME, self.layout, keep_on_top=False, finalize=True, alpha_channel=0.95, icon=b'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpVIrDhYVcchQnezgB+JYqlgEC6Wt0KqDyaVf0KQhSXFxFFwLDn4sVh1cnHV1cBUEwQ8QZwcnRRcp8X9NoUWMB8f9eHfvcfcOEOplpppdEUDVLCMZi4qZ7Kroe0UvBjEEPyYlZurx1GIaruPrHh6+3oV5lvu5P0efkjMZ4BGJI0w3LOIN4tlNS+e8TxxkRUkhPieeMOiCxI9clx1+41xossAzg0Y6OU8cJBYLHSx3MCsaKvEMcUhRNcoXMg4rnLc4q+Uqa92TvzCQ01ZSXKc5ihiWEEcCImRUUUIZFsK0aqSYSNJ+1MU/0vQnyCWTqwRGjgVUoEJq+sH/4He3Zn56ykkKRIHuF9v+GAN8u0CjZtvfx7bdOAG8z8CV1vZX6sDcJ+m1thY6Avq3gYvrtibvAZc7wPCTLhlSU/LSFPJ54P2MvikLDNwC/jWnt9Y+Th+ANHW1fAMcHALjBcped3l3T2dv/55p9fcD3S9y0apk9h0AAAAGYktHRAD/AP8A/6C9p5MAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfoCxYXCzDoJVaPAAACuElEQVQ4y2WTTW8bdRDGfzO767f1xnGcJiSNVNoKqMoJgRBCwifuIHFFuSDRTwDi2CNfgC/gGxfElV6ockEISAJBiAJ5KVnqxk7idbx+ie39DwcngaqH0Wj0HJ756ZmRjz7940Ym0nCe1DMVnArZRbn/d+85bcMJ6744GqrUzYFimIAamMF5P8GCAC1GqAMDlFk3qItKQ9WsrmaoGd32LjYeMeg0edj4mOP9Hzj4/ku2v77PJO3MtPZj1GYmYlb31c1ch2ct5uZW6XZikpN9Rr02v377BenRNsuvvkfa2sUP5wlKFbJhDy1FmAm+GpiD6XkfRFGDfD7infc/p9XcobTwGbmoRpq2sKBI8VqNXjemUCijAr6YXa2kCL74RHOrEORYufkW5vk4haJlOAQFyDLUAAeqzhBn5IOQwMsxGfUo5MqMBwm++IjLmPQTovk1PFFGyVPCygpqhphdIBiUS4t0zg5ZWrqL84RcWL2KraTgVPEWb5KmLQIvT+bsWYThIKF1+BO9XpPDg+9YufU2raPfqCy/zOnJHvlyFcmVyMhYq65h/yGAOGA64cmjBxzHW/Tbf5Ec/c5Z6xFh+RphtESvfUAn3mFh+Q5yEbuYoZc3oAbVxZc4T2KiuRcYnP7N3dc/JCzVZjpGLiiyv/kVl6bqDPnk3o51ksc0n25SrFwn85TxdIRXiBi7Mc5Tpm5CYX6F5uGP5Mo1BoMON974AK8YzRCycUpn9yHd5i9M0xO6/2xzGm9ynsSEpRrZ8Ixee4+9b+5TrqzSP96buV8ieA5eefMeMh7Re/IzleqLyGSEOkcn3iKJt+i3/qR2612GpzGlcBFPfdSBL8bG/MLtulMhfO06mQoWBLMIRXCesnZn+sxnLtkUTzww2/AxWw+8fMOJ1NUv4Lzn39lXIVOu5kAFJ7rhnK3/C07bcJ2GHOyzAAAAAElFTkSuQmCC')
             self.window.set_resizable(False, True)
+            # Lock in current window size as minimum
+            self.window.set_min_size(self.window.size)
+            # Expand from minimum size in Y direction
+            self.window.size = (self.window.size[0], self.window.size[1] + 150)
             # Start background refresh timer
             self.window.timer_start(TIMER_REFRESH_MS, key=KEY_TIMER_REFRESH, repeating=False)
 
@@ -289,12 +327,12 @@ class GUIRenderer:
         elif event == KEY_BTN_APPLY:
             self.restart_osc_event()
         elif event == KEY_BTN_REFRESH:
-            self.refresh_trackers_event()
+            self.refresh_vr_event()
         elif event == KEY_OPEN_URL:
             webbrowser.open("https://hapticpancake.com/")
         elif event == KEY_TIMER_REFRESH:
             # Quietly refresh on timer elapse
-            self.refresh_trackers_event(quiet_refresh=True)
+            self.refresh_vr_event(quiet_refresh=True)
             self.window.timer_start(TIMER_REFRESH_MS, key=KEY_TIMER_REFRESH, repeating=False)
 
         return True

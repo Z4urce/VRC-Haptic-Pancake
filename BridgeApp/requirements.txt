@@ -1,5 +1,6 @@
 freesimplegui~=5.1.0
 openvr~=1.26.701
+platformdirs~=4.3.8
 pydantic~=2.8.0
 pyserial~=3.5
 python-osc~=1.8.3

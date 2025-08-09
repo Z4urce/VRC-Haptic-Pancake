@@ -2,16 +2,15 @@ import openvr
 from app_runner import FeedbackThread
 from app_config import VRTracker, AppConfig
 from typing import List, Dict
-import os
+from vr_manifest import VRManifest
 
 class OpenVRHandler:
-    manifest_path = "manifest.vrmanifest"
-    manifest_app_key = "hapticpancake"
-
     def __init__(self, config: AppConfig):
         self.devices: List[VRTracker] = []
         self.vibration_managers: Dict[str, FeedbackThread] = {}
         self.vr = None
+        self.vr_apps = None
+        self.vr_manifest = VRManifest()
         self.config = config
 
     def try_init_openvr(self, quiet_refresh=False):
@@ -19,12 +18,13 @@ class OpenVRHandler:
             return True
         try:
             self.vr = openvr.init(openvr.VRApplication_Background)
+            self.vr_apps = openvr.VRApplications()
             self.devices: [VRTracker] = []
-            print("[OpenVRTracker] Successfully initialized.")
+            print("[OpenVRHandler] Successfully initialized.")
             return True
         except:
             if not quiet_refresh:
-                print("[OpenVRTracker] Failed to initialize OpenVR.")
+                print("[OpenVRHandler] Failed to initialize OpenVR.")
             return False
 
     def query_devices(self, quiet_refresh=False):
@@ -77,31 +77,88 @@ class OpenVRHandler:
         if serial in self.vibration_managers:
             self.vibration_managers[serial].force_pulse(pulse_length)
 
+    @property
     def is_alive(self):
         return self.vr is not None
 
+    @property
+    def is_app_bundled(self):
+        """Gets if app is bundled in a single file (e.g. PyInstaller)"""
+        return self.vr_manifest.is_app_bundled
+
+    @property
+    def is_vr_registered(self):
+        """Gets if the app is registered with the OpenVR runtime"""
+        if not self.is_alive:
+            raise RuntimeError("Cannot check if app registered when VR isn't initialized")
+
+        return self.vr_apps.isApplicationInstalled(self.vr_manifest.app_key)
+
+    @property
+    def is_vr_autolaunch_enabled(self):
+        """Gets if the app is registered with the OpenVR runtime"""
+        if not self.is_alive:
+            raise RuntimeError("Cannot check if app auto-launching when VR isn't initialized")
+
+        if not self.is_vr_registered:
+            return False
+
+        return self.vr_apps.getApplicationAutoLaunch(self.vr_manifest.app_key)
+
+    @property
+    def is_manifest_recent(self):
+        """Gets if VR manifest file has been saved this launch"""
+        return self.vr_manifest.is_recent
+
     def __pulse(self, index, pulse_length: int = 200):
-        if self.is_alive():
+        if self.is_alive:
             self.vr.triggerHapticPulse(index, 0, pulse_length)
+
+    def resync_autostart(self):
+        """Resyncs Haptic Pancake auto-start with VR auto-launch, if possible
+
+        Also refreshes VR manifest file to account for moving the app around
+        """
+        if not self.try_init_openvr(False):
+            return False
+
+        # Check if VR runtime has autostart status changed
+        if self.is_vr_registered:
+            vr_autolaunch = self.is_vr_autolaunch_enabled
+            if self.config.start_with_steamvr != vr_autolaunch:
+                print(f"[OpenVRHandler] Auto-launch status changed to {vr_autolaunch == True}, updating config")
+                self.config.start_with_steamvr = vr_autolaunch
+                self.setup_autostart(vr_autolaunch)
+                return True
+
+            # Check if VR manifest hasn't been refreshed (skipped if refreshed above)
+            if not self.is_manifest_recent:
+                print("[OpenVRHandler] Refreshing manifest as app is already registered")
+                self.setup_autostart(self.config.start_with_steamvr)
+
+        return False
 
     def setup_autostart(self, autostart: bool):
         if not self.try_init_openvr(False):
             return
-        
-        absolute_manifest_path = os.path.join(os.getcwd(), self.manifest_path)
-        apps = openvr.VRApplications()
-        currently_installed = apps.isApplicationInstalled(self.manifest_app_key)
 
         if autostart:
-            if not currently_installed: 
-                print(f"[OpenVRHandler] Installing vrmanifest {absolute_manifest_path}")
-                apps.addApplicationManifest(absolute_manifest_path, False)
-            if not apps.getApplicationAutoLaunch(self.manifest_app_key):
-                    print("[OpenVRHandler] Enabling auto launch")
-                    apps.setApplicationAutoLaunch(self.manifest_app_key, True)
+            # Always save manifest file so it's kept up-to-date with moving/renaming app
+            self.vr_manifest.save()
+
+            if not self.is_vr_registered:
+                print(f"[OpenVRHandler] Installing vrmanifest: {self.vr_manifest.manifest_path}")
+                self.vr_apps.addApplicationManifest(self.vr_manifest.manifest_path, False)
+
+            if not self.is_vr_autolaunch_enabled:
+                print("[OpenVRHandler] Enabling auto launch")
+                self.vr_apps.setApplicationAutoLaunch(self.vr_manifest.app_key, True)
         else:
-            if currently_installed:
-                if apps.getApplicationAutoLaunch(self.manifest_app_key):
+            if self.is_vr_registered:
+                # Once installed, ensure manifest file is kept up-to-date with
+                # moving/renaming the app, even if autostart is currently disabled.
+                self.vr_manifest.save()
+
+                if self.is_vr_autolaunch_enabled:
                     print("[OpenVRHandler] Disabling auto launch")
-                    apps.setApplicationAutoLaunch(self.manifest_app_key, False)
-                    
+                    self.vr_apps.setApplicationAutoLaunch(self.vr_manifest.app_key, False)

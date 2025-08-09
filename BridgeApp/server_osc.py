@@ -13,7 +13,7 @@ class VRChatOSCReceiver(ServerBase):
         self.dispatcher = Dispatcher()
 
     def shutdown(self):
-        if self.is_alive():
+        if self.is_alive:
             self.print_status("Shutting down...", True)
             self.server.shutdown()
             self.server.server_close()
@@ -28,12 +28,13 @@ class VRChatOSCReceiver(ServerBase):
             pass
 
     def run(self):
-        if not self.is_alive():
+        if not self.is_alive:
             return
         self.dispatcher.map("/avatar/parameters/*", self.event_received)
         self.print_status(f"OSC Receiver serving on {self.server.server_address}", True)
         self.server.serve_forever()
 
+    @property
     def is_alive(self):
         return self.server is not None
 
