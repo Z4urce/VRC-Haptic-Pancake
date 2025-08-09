@@ -38,7 +38,7 @@ Curious about the development? Have any questions? Join the discord!
 This software is under the [GNU General Public License](LICENSE)
 
 ## Building the software yourself
-If you want to build the software yourself, simply clone the repo, run `pip install -r BridgeApp\requirements.txt`, run `pip install pyinstaller`, then just run `.\build.bat` to build the app.  
+If you want to build the software yourself, simply clone the repo, run `pip install -r BridgeApp\requirements.txt`, run `pip install pyinstaller`, then just run `.\build.bat` to build the app.
 
 The resulting windows binary will be at `dist\hapticpancake.exe`
 
