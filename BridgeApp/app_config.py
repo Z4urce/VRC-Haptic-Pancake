@@ -1,10 +1,14 @@
 import os.path
 import json
+import mmap
+import shutil
 from pydantic import BaseModel
 from typing import Dict, List, Any
 
-CONFIG_FILE_NAME: str = "config.json"
+CONFIG_FILE_NAME: str = "hapticpancake-config.json"
 
+# Old versions of Haptic Pancake
+LEGACY_CONFIG_FILE_NAME: str = "config.json"
 
 # This is a runtime class for storing OVR trackers
 class VRTracker:
@@ -124,6 +128,27 @@ class AppConfig(BaseModel):
     @staticmethod
     def load():
         # return AppConfig()
+        if os.path.exists(LEGACY_CONFIG_FILE_NAME):
+            # Quickly check if config file looks valid without fully loading
+            # Guards against enormous unrelated config.json files
+            # See https://stackoverflow.com/questions/4940032/how-to-search-for-a-string-in-text-files
+            try:
+                move_path_needed = False
+                with open(LEGACY_CONFIG_FILE_NAME, 'rb', 0) as cfg_file, \
+                    mmap.mmap(cfg_file.fileno(), 0, access=mmap.ACCESS_READ) as cfg_txt:
+                        if cfg_txt.find(b'tracker_config_dict') != -1:
+                            move_path_needed = True
+                if move_path_needed:
+                    if not os.path.exists(CONFIG_FILE_NAME):
+                        print(f"[Config] Moving legacy '{LEGACY_CONFIG_FILE_NAME}' to '{CONFIG_FILE_NAME}'")
+                        shutil.move(LEGACY_CONFIG_FILE_NAME, CONFIG_FILE_NAME)
+                    else:
+                        print(f"[Config] Ignoring legacy '{LEGACY_CONFIG_FILE_NAME}', '{CONFIG_FILE_NAME}' already exists")
+                else:
+                    print(f"[Config] Contents of legacy '{LEGACY_CONFIG_FILE_NAME}' not recognized, ignoring...")
+            except:
+                print(f"[Config][ERROR] Couldn't migrate legacy '{LEGACY_CONFIG_FILE_NAME}', ignoring...")
+
         if not os.path.exists(CONFIG_FILE_NAME):
             print("[Config] File not found. Loading default config...")
             return AppConfig()
@@ -137,4 +162,4 @@ class AppConfig(BaseModel):
 
     def save(self):
         with open(CONFIG_FILE_NAME, "w+") as settings_file:
-            json.dump(self.model_dump(), fp=settings_file)
+            json.dump(self.model_dump(), fp=settings_file, sort_keys=True, indent=4)
