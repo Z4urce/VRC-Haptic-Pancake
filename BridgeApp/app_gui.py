@@ -441,7 +441,10 @@ class GUIRenderer:
         # Update OSC Addresses
         self.config.server_type = LIST_SERVER_TYPE.index(values[KEY_SERVER_TYPE])
         self.config.server_ip = values[KEY_REC_IP]
-        self.config.server_port = int(values[KEY_REC_PORT])
+        try:
+            self.config.server_port = int(values[KEY_REC_PORT])
+        except ValueError:
+            pass
 
         # Update vibration intensity and pattern
         self.update_pattern_config(values, VibrationPattern.PROXIMITY, KEY_PROXIMITY)
@@ -466,6 +469,13 @@ class GUIRenderer:
 
     def update_pattern_config(self, values, index: int, key: str):
         self.config.pattern_config_list[index].pattern = values[key + KEY_VIB_PATTERN]
-        self.config.pattern_config_list[index].str_min = int(values[key + KEY_VIB_STR_MIN])
-        self.config.pattern_config_list[index].str_max = int(values[key + KEY_VIB_STR_MAX])
+        # If Spin value is backspaced, it can result in "" or "\n" - ignore this
+        try:
+            self.config.pattern_config_list[index].str_min = int(values[key + KEY_VIB_STR_MIN])
+        except ValueError:
+            pass
+        try:
+            self.config.pattern_config_list[index].str_max = int(values[key + KEY_VIB_STR_MAX])
+        except ValueError:
+            pass
         self.config.pattern_config_list[index].speed = int(values[key + KEY_VIB_SPEED])
