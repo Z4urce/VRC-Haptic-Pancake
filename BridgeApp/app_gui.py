@@ -7,6 +7,7 @@ from app_pattern import VibrationPattern
 WINDOW_NAME = "Haptic Pancake Bridge v0.8.0a"
 
 LIST_SERVER_TYPE = ["OSC (VRChat)", "WebSocket (Resonite)"]
+LIST_THEME = [] # Initialized in __init__
 
 KEY_SERVER_TYPE = '-SERVER-TYPE-'
 KEY_REC_IP = '-REC-IP-'
@@ -26,6 +27,8 @@ KEY_BATTERY_THRESHOLD = '-BATTERY-'
 KEY_START_WITH_STEAMVR = '-START-WITH-STEAMVR-'
 KEY_AUTOSTART_STATUS_BAR = '-AUTOSTART-STATUS-BAR-'
 KEY_START_MINIMIZED = '-START-MINIMIZED-'
+KEY_THEME = '-THEME-'
+KEY_BTN_THEME_RESET = '-BTN-THEME-RESET-'
 
 # Pattern Config
 KEY_PROXIMITY = '-PROXY-'
@@ -40,12 +43,12 @@ KEY_VIB_SPEED = '-VIB-SPD-'
 KEY_TIMER_REFRESH = '-TIMER-REFRESH-'
 TIMER_REFRESH_MS = 10 * 1000
 
+# If changing this, also update app_config.py!
+DEFAULT_THEME="DarkAmber"
+
 class GUIRenderer:
     def __init__(self, app_config: AppConfig, tracker_test_event,
                  restart_osc_event, refresh_vr_event, add_external_event, setup_autostart_event):
-        sg.theme('DarkAmber')
-        self.theme_color_bad = "red"
-        self.theme_color_good = "lime"
         self.tracker_test_event = tracker_test_event
         self.restart_osc_event = restart_osc_event
         self.refresh_vr_event = refresh_vr_event
@@ -57,15 +60,45 @@ class GUIRenderer:
         self.window = None
         self.layout_dirty = False
         self.trackers = []
+
+        # Add custom themes
+        sg.theme_add_new('OLEDPurple', {'BACKGROUND': '#000000','TEXT': '#FFFFFF','INPUT': '#4D4D4D','TEXT_INPUT': '#FFFFFF','SCROLL': '#707070','BUTTON': ('#FFFFFF', '#371f76'),'PROGRESS': ('#000000','#000000'),'BORDER': 1,'SLIDER_DEPTH': 0,'PROGRESS_DEPTH': 0,})
+        global LIST_THEME
+        LIST_THEME = sg.theme_list()
+
+        # Load theme from config
+        #
+        # NOTE: You can't just try/catch! PySimpleGui helpfully prevents errors
+        # from happening, printing this to console...
+        #
+        # > ** Warning - InvalidTheme Theme is not a valid theme. Change your theme call. **
+        # > valid values are ['Black', 'Black2', [...] 'Topanga']
+        # > Instead, please enjoy a random Theme named DarkBrown4
+        #
+        # Yes, it could randomly pick HotDogStand :I
+
+        if self.config.theme in LIST_THEME:
+            sg.theme(self.config.theme)
+        else:
+            print(f"[GUI] Couldn't find requested theme '{self.config.theme}', defaulting to {DEFAULT_THEME}")
+            sg.theme(DEFAULT_THEME)
+            self.config.theme = DEFAULT_THEME
+
+        self.build_layout()
+
+    def build_layout(self):
+        # Ideally these would be updated to maintain contrast
+        self.theme_color_bad = "red"
+        self.theme_color_good = "lime"
+
+        self.layout = []
+
         self.autostart_chkbox = sg.Checkbox("Start with SteamVR", default=self.config.start_with_steamvr, key=KEY_START_WITH_STEAMVR, enable_events=True, tooltip="Open Haptic Pancake Bridge when opening SteamVR.")
         self.autostart_status_bar = sg.Text('', key=KEY_AUTOSTART_STATUS_BAR)
         self.osc_status_bar = sg.Text('', key=KEY_OSC_STATUS_BAR)
         self.tracker_status_bar = sg.Text('', key=KEY_TRACKER_STATUS_BAR, font='_ 14')
         self.tracker_frame = sg.Column([], key=KEY_LAYOUT_TRACKERS, scrollable=True, vertical_scroll_only=True, expand_y=True, expand_x = True, size=(400,120))
-        self.layout = []
-        self.build_layout()
 
-    def build_layout(self):
         proximity_frame = sg.Frame('Proximity Feedback', tooltip="Closer object means stronger vibration.",
                                    layout=self.build_pattern_setting_layout(
                                        KEY_PROXIMITY, VibrationPattern.VIB_PATTERN_LIST,
@@ -84,6 +117,9 @@ class GUIRenderer:
             [sg.Text('App settings:', font='_ 14')],
             [self.autostart_chkbox, sg.Push(), self.autostart_status_bar],
             [sg.Checkbox("Start minimized", default=self.config.start_minimized, key=KEY_START_MINIMIZED, enable_events=True)],
+            [sg.Text("Theme:", justification='right', size=7),
+             sg.InputCombo(LIST_THEME, self.config.theme, key=KEY_THEME, readonly=True, enable_events=True, tooltip="Change app theme.\nCAUTION: Some themes are hard to read.  Be ready to reset."),
+             sg.Button("Reset", key=KEY_BTN_THEME_RESET, tooltip=f"Reset theme to default ({DEFAULT_THEME})")],
             [sg.Text('Server settings:', font='_ 14')],
             [sg.Text("Type:", justification='right', size=7),
              sg.InputCombo(LIST_SERVER_TYPE, LIST_SERVER_TYPE[self.config.server_type], key=KEY_SERVER_TYPE, readonly=True)],
@@ -97,7 +133,8 @@ class GUIRenderer:
             [sg.Text('Haptic settings:', font='_ 14')],
             [sg.Push(), proximity_frame, velocity_frame, sg.Push()],
             [self.small_vertical_space()],
-            [sg.Text('Devices:', font='_ 14'), self.tracker_status_bar, sg.Push(), sg.Button("Refresh", key=KEY_BTN_REFRESH), add_external_button],
+            [sg.Text('Devices:', font='_ 14'), self.tracker_status_bar, sg.Push(), sg.Button("Refresh", key=KEY_BTN_REFRESH)],
+            # add_external_button],
             [self.tracker_frame],
             [sg.HSep()],
             [sg.Text("Made by BIT FOX DEN / Zelus", enable_events=True, font='Default 8 underline', key=KEY_OPEN_URL), sg.Sizegrip()],
@@ -171,8 +208,9 @@ class GUIRenderer:
               sg.Text("Pulse multiplier:", tooltip=multiplier_tooltip, pad=0),
               sg.InputText(vib_multiplier, k=(KEY_VIB_STR_OVERRIDE, tracker_serial), enable_events=True,
                            size=4, tooltip=multiplier_tooltip),
-              sg.Button("Calibrate", button_color='grey', disabled=True, key=(KEY_BTN_CALIBRATE, tracker_serial),
-                        tooltip="Coming soon...")]
+              ]
+              #sg.Button("Calibrate", button_color='grey', disabled=True, key=(KEY_BTN_CALIBRATE, tracker_serial),
+              #          tooltip="Coming soon...")]
         return self.device_row(tracker_serial, tracker_model, tr, color=color, quiet_refresh=quiet_refresh)
 
     def add_tracker(self, tracker_serial, tracker_model, is_online=False, quiet_refresh=False):
@@ -290,29 +328,60 @@ class GUIRenderer:
         self.tracker_frame.contents_changed()
         self.tracker_frame.set_vscroll_position(1)
         self.window.refresh()
+        self.layout_dirty = False
+
+
+    def create_window(self):
+        self.window = sg.Window(WINDOW_NAME, self.layout, keep_on_top=False, finalize=True, alpha_channel=1, icon=b'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpVIrDhYVcchQnezgB+JYqlgEC6Wt0KqDyaVf0KQhSXFxFFwLDn4sVh1cnHV1cBUEwQ8QZwcnRRcp8X9NoUWMB8f9eHfvcfcOEOplpppdEUDVLCMZi4qZ7Kroe0UvBjEEPyYlZurx1GIaruPrHh6+3oV5lvu5P0efkjMZ4BGJI0w3LOIN4tlNS+e8TxxkRUkhPieeMOiCxI9clx1+41xossAzg0Y6OU8cJBYLHSx3MCsaKvEMcUhRNcoXMg4rnLc4q+Uqa92TvzCQ01ZSXKc5ihiWEEcCImRUUUIZFsK0aqSYSNJ+1MU/0vQnyCWTqwRGjgVUoEJq+sH/4He3Zn56ykkKRIHuF9v+GAN8u0CjZtvfx7bdOAG8z8CV1vZX6sDcJ+m1thY6Avq3gYvrtibvAZc7wPCTLhlSU/LSFPJ54P2MvikLDNwC/jWnt9Y+Th+ANHW1fAMcHALjBcped3l3T2dv/55p9fcD3S9y0apk9h0AAAAGYktHRAD/AP8A/6C9p5MAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfoCxYXCzDoJVaPAAACuElEQVQ4y2WTTW8bdRDGfzO767f1xnGcJiSNVNoKqMoJgRBCwifuIHFFuSDRTwDi2CNfgC/gGxfElV6ockEISAJBiAJ5KVnqxk7idbx+ie39DwcngaqH0Wj0HJ756ZmRjz7940Ym0nCe1DMVnArZRbn/d+85bcMJ6744GqrUzYFimIAamMF5P8GCAC1GqAMDlFk3qItKQ9WsrmaoGd32LjYeMeg0edj4mOP9Hzj4/ku2v77PJO3MtPZj1GYmYlb31c1ch2ct5uZW6XZikpN9Rr02v377BenRNsuvvkfa2sUP5wlKFbJhDy1FmAm+GpiD6XkfRFGDfD7infc/p9XcobTwGbmoRpq2sKBI8VqNXjemUCijAr6YXa2kCL74RHOrEORYufkW5vk4haJlOAQFyDLUAAeqzhBn5IOQwMsxGfUo5MqMBwm++IjLmPQTovk1PFFGyVPCygpqhphdIBiUS4t0zg5ZWrqL84RcWL2KraTgVPEWb5KmLQIvT+bsWYThIKF1+BO9XpPDg+9YufU2raPfqCy/zOnJHvlyFcmVyMhYq65h/yGAOGA64cmjBxzHW/Tbf5Ec/c5Z6xFh+RphtESvfUAn3mFh+Q5yEbuYoZc3oAbVxZc4T2KiuRcYnP7N3dc/JCzVZjpGLiiyv/kVl6bqDPnk3o51ksc0n25SrFwn85TxdIRXiBi7Mc5Tpm5CYX6F5uGP5Mo1BoMON974AK8YzRCycUpn9yHd5i9M0xO6/2xzGm9ynsSEpRrZ8Ixee4+9b+5TrqzSP96buV8ieA5eefMeMh7Re/IzleqLyGSEOkcn3iKJt+i3/qR2612GpzGlcBFPfdSBL8bG/MLtulMhfO06mQoWBLMIRXCesnZn+sxnLtkUTzww2/AxWw+8fMOJ1NUv4Lzn39lXIVOu5kAFJ7rhnK3/C07bcJ2GHOyzAAAAAElFTkSuQmCC')
+
+        self.window.set_resizable(False, True)
+
+        # Lock in current window size as minimum
+        self.window.set_min_size(self.window.size)
+        # Expand from minimum size in Y direction
+        self.window.size = (self.window.size[0], self.window.size[1] + 150)
+
+        # Start background refresh timer
+        self.window.timer_start(TIMER_REFRESH_MS, key=KEY_TIMER_REFRESH, repeating=False)
+
+
+    def recreate_window(self):
+        # Cache OSC status
+        osc_status_bar_text = self.osc_status_bar.DisplayText
+        osc_status_bar_color = self.osc_status_bar.TextColor
+
+        # Close window, recreate new layout and recreate window
+        self.shutting_down = True
+        self.window.close()
+        self.window = None
+        self.shutting_down = False
+        self.build_layout()
+        self.create_window()
+
+        # Refresh trackers/etc because it's too much of a pain to cache them and re-add them
+        self.trackers = []
+        self.refresh_vr_event()
+
+        # Manually re-add osc status
+        self.osc_status_bar.update(osc_status_bar_text, text_color=osc_status_bar_color)
+        self.osc_status_bar.TextColor = osc_status_bar_color
+
+        # Mark layout as dirty
         self.layout_dirty = True
+
 
     def run(self):
         if self.window is None:
-            self.window = sg.Window(WINDOW_NAME, self.layout, keep_on_top=False, finalize=True, alpha_channel=0.95, icon=b'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpVIrDhYVcchQnezgB+JYqlgEC6Wt0KqDyaVf0KQhSXFxFFwLDn4sVh1cnHV1cBUEwQ8QZwcnRRcp8X9NoUWMB8f9eHfvcfcOEOplpppdEUDVLCMZi4qZ7Kroe0UvBjEEPyYlZurx1GIaruPrHh6+3oV5lvu5P0efkjMZ4BGJI0w3LOIN4tlNS+e8TxxkRUkhPieeMOiCxI9clx1+41xossAzg0Y6OU8cJBYLHSx3MCsaKvEMcUhRNcoXMg4rnLc4q+Uqa92TvzCQ01ZSXKc5ihiWEEcCImRUUUIZFsK0aqSYSNJ+1MU/0vQnyCWTqwRGjgVUoEJq+sH/4He3Zn56ykkKRIHuF9v+GAN8u0CjZtvfx7bdOAG8z8CV1vZX6sDcJ+m1thY6Avq3gYvrtibvAZc7wPCTLhlSU/LSFPJ54P2MvikLDNwC/jWnt9Y+Th+ANHW1fAMcHALjBcped3l3T2dv/55p9fcD3S9y0apk9h0AAAAGYktHRAD/AP8A/6C9p5MAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfoCxYXCzDoJVaPAAACuElEQVQ4y2WTTW8bdRDGfzO767f1xnGcJiSNVNoKqMoJgRBCwifuIHFFuSDRTwDi2CNfgC/gGxfElV6ockEISAJBiAJ5KVnqxk7idbx+ie39DwcngaqH0Wj0HJ756ZmRjz7940Ym0nCe1DMVnArZRbn/d+85bcMJ6744GqrUzYFimIAamMF5P8GCAC1GqAMDlFk3qItKQ9WsrmaoGd32LjYeMeg0edj4mOP9Hzj4/ku2v77PJO3MtPZj1GYmYlb31c1ch2ct5uZW6XZikpN9Rr02v377BenRNsuvvkfa2sUP5wlKFbJhDy1FmAm+GpiD6XkfRFGDfD7infc/p9XcobTwGbmoRpq2sKBI8VqNXjemUCijAr6YXa2kCL74RHOrEORYufkW5vk4haJlOAQFyDLUAAeqzhBn5IOQwMsxGfUo5MqMBwm++IjLmPQTovk1PFFGyVPCygpqhphdIBiUS4t0zg5ZWrqL84RcWL2KraTgVPEWb5KmLQIvT+bsWYThIKF1+BO9XpPDg+9YufU2raPfqCy/zOnJHvlyFcmVyMhYq65h/yGAOGA64cmjBxzHW/Tbf5Ec/c5Z6xFh+RphtESvfUAn3mFh+Q5yEbuYoZc3oAbVxZc4T2KiuRcYnP7N3dc/JCzVZjpGLiiyv/kVl6bqDPnk3o51ksc0n25SrFwn85TxdIRXiBi7Mc5Tpm5CYX6F5uGP5Mo1BoMON974AK8YzRCycUpn9yHd5i9M0xO6/2xzGm9ynsSEpRrZ8Ixee4+9b+5TrqzSP96buV8ieA5eefMeMh7Re/IzleqLyGSEOkcn3iKJt+i3/qR2612GpzGlcBFPfdSBL8bG/MLtulMhfO06mQoWBLMIRXCesnZn+sxnLtkUTzww2/AxWw+8fMOJ1NUv4Lzn39lXIVOu5kAFJ7rhnK3/C07bcJ2GHOyzAAAAAElFTkSuQmCC')
-            self.window.set_resizable(False, True)
-            # Lock in current window size as minimum
-            self.window.set_min_size(self.window.size)
-            # Expand from minimum size in Y direction
-            self.window.size = (self.window.size[0], self.window.size[1] + 150)
+            self.create_window()
 
+            # Only minimize window on start, not on recreating
             if (self.config.start_minimized):
                 self.window.minimize()
-            # Start background refresh timer
-            self.window.timer_start(TIMER_REFRESH_MS, key=KEY_TIMER_REFRESH, repeating=False)
 
         # Update Layout if it's changed.
         if self.layout_dirty:
             self.refresh()
-            print('Refreshing layout...')
-        
-        # We make sure the layout update is called only when it's changed.
-        self.layout_dirty = False
+            print("[GUI] Refreshing layout...")
 
         # This is the main GUI loop. The code will halt here until the next event.
         event, values = self.window.read()
@@ -331,6 +400,11 @@ class GUIRenderer:
             self.add_external_event(values[KEY_BTN_ADD_EXTERNAL])
         elif event == KEY_BTN_APPLY:
             self.restart_osc_event()
+        elif event == KEY_BTN_THEME_RESET:
+            if self.config.theme != DEFAULT_THEME:
+                self.config.theme = DEFAULT_THEME
+                sg.theme(self.config.theme)
+                self.recreate_window()
         elif event == KEY_BTN_REFRESH:
             self.refresh_vr_event()
         elif event == KEY_OPEN_URL:
@@ -351,6 +425,12 @@ class GUIRenderer:
             self.update_tracker_config(values, tracker)
 
         # Update app settings
+        oldTheme = self.config.theme
+        self.config.theme = values[KEY_THEME]
+        if oldTheme != self.config.theme: # Theme change
+            sg.theme(self.config.theme)
+            self.recreate_window()
+
         old_start_with_steamvr = self.config.start_with_steamvr
         self.config.start_with_steamvr = values[KEY_START_WITH_STEAMVR]
         if old_start_with_steamvr != self.config.start_with_steamvr:
