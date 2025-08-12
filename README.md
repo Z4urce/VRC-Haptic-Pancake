@@ -48,3 +48,4 @@ For Linux, use `./build.sh` instead of `build.bat`.
 - @BubblegumFoxxo (For helping in the testing and debugging)
 - @vulp_vibes (for giving me the idea)
 - @digitalf0x (for support and contributions)
+- @CyberKitsune (for [`tinyoscquery`](https://github.com/cyberkitsune/tinyoscquery) library)

@@ -5,4 +5,5 @@ pydantic~=2.8.0
 pyserial~=3.5
 python-osc~=1.8.3
 setuptools~=75.3
+tinyoscquery @ git+https://github.com/cyberkitsune/tinyoscquery@5765a85b0d83da41b8266f75dfd3c99f0dec4411
 websockets~=12.0

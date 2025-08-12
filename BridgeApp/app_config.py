@@ -89,6 +89,7 @@ class AppConfig(BaseModel):
     start_minimized: bool = False
     theme: str = "DarkAmber" # If changing this, also update app_gui.py!
     server_type: int = 0
+    server_osc_oscquery: bool = True
     server_ip: str = "127.0.0.1"
     server_port: int = 9001
     pattern_config_list: List[PatternConfig] = []

@@ -6,10 +6,12 @@ from app_pattern import VibrationPattern
 
 WINDOW_NAME = "Haptic Pancake Bridge v0.8.0a"
 
+# If changing order, also change update_oscquery_state()
 LIST_SERVER_TYPE = ["OSC (VRChat)", "WebSocket (Resonite)"]
 LIST_THEME = [] # Initialized in __init__
 
 KEY_SERVER_TYPE = '-SERVER-TYPE-'
+KEY_SERVER_OSCQUERY = '-SERVER-OSCQUERY-'
 KEY_REC_IP = '-REC-IP-'
 KEY_REC_PORT = '-REC-PORT-'
 KEY_BTN_APPLY = '-BTN-APPLY-'
@@ -55,6 +57,15 @@ class GUIRenderer:
         self.add_external_event = add_external_event
         self.setup_autostart_event = setup_autostart_event
 
+        # HACK: Py/FreeSimpleGUI has a fun bug where if the main thread gets
+        # blocked for some time when changing properties (e.g. TextColor), the
+        # new property value will be shown but not stored in the widget.
+        # Instead of dealing with that, just cache the OSC status text/color
+        # here for whenever the UI needs recreated.
+        self.cache_osc_status_bar_text = 'Loading...'
+        self.cache_osc_status_bar_color = None
+        self.cache_server_apply_disabled = True
+
         self.config = app_config
         self.shutting_down = False
         self.window = None
@@ -95,7 +106,7 @@ class GUIRenderer:
 
         self.autostart_chkbox = sg.Checkbox("Start with SteamVR", default=self.config.start_with_steamvr, key=KEY_START_WITH_STEAMVR, enable_events=True, tooltip="Open Haptic Pancake Bridge when opening SteamVR.")
         self.autostart_status_bar = sg.Text('', key=KEY_AUTOSTART_STATUS_BAR)
-        self.osc_status_bar = sg.Text('', key=KEY_OSC_STATUS_BAR)
+        self.osc_status_bar = sg.Text(self.cache_osc_status_bar_text, key=KEY_OSC_STATUS_BAR, text_color=self.cache_osc_status_bar_color)
         self.tracker_status_bar = sg.Text('', key=KEY_TRACKER_STATUS_BAR, font='_ 14')
         self.tracker_frame = sg.Column([], key=KEY_LAYOUT_TRACKERS, scrollable=True, vertical_scroll_only=True, expand_y=True, expand_x = True, size=(400,120))
 
@@ -113,6 +124,15 @@ class GUIRenderer:
         add_external_button = sg.ButtonMenu("Add External device", external_devices, key=KEY_BTN_ADD_EXTERNAL, disabled=True,
                                             tooltip="Add an external feedback device")
 
+        self.server_oscquery_chkbox = sg.Checkbox("Auto-detect port (OSCQuery)",
+            default=self.config.server_osc_oscquery, key=KEY_SERVER_OSCQUERY, enable_events=True,
+            tooltip="Use OSCQuery to automatically pick an OSC port for VRChat", pad=0)
+        # Py/FreeSimpleGUI's "disabled" state for InputText is hard to read on most themes
+        # Replace with a simple Text string instead
+        self.server_port_input = sg.InputText(self.config.server_port, key=KEY_REC_PORT, size=13)
+        self.server_port_auto = sg.Text("[automatic]", size=13, visible=False)
+        self.server_apply_btn = sg.Button("Apply", key=KEY_BTN_APPLY, tooltip="Apply and restart server.", disabled=self.cache_server_apply_disabled)
+
         self.layout = [
             [sg.Text('App settings:', font='_ 14')],
             [self.autostart_chkbox, sg.Push(), self.autostart_status_bar],
@@ -122,13 +142,15 @@ class GUIRenderer:
              sg.Button("Reset", key=KEY_BTN_THEME_RESET, tooltip=f"Reset theme to default ({DEFAULT_THEME})")],
             [sg.Text('Server settings:', font='_ 14')],
             [sg.Text("Type:", justification='right', size=7),
-             sg.InputCombo(LIST_SERVER_TYPE, LIST_SERVER_TYPE[self.config.server_type], key=KEY_SERVER_TYPE, readonly=True)],
+             sg.InputCombo(LIST_SERVER_TYPE, LIST_SERVER_TYPE[self.config.server_type], key=KEY_SERVER_TYPE, readonly=True, enable_events=True),
+             sg.pin(self.server_oscquery_chkbox)],
             [sg.Text("Address:", justification='right', size=7),
              sg.InputText(self.config.server_ip, k=KEY_REC_IP, size=23, tooltip="IP Address. Default is 127.0.0.1"),
              sg.Text("Port:", tooltip="UDP Port. Default is 9001"),
-             sg.InputText(self.config.server_port, key=KEY_REC_PORT, size=13),
+             sg.pin(self.server_port_input),
+             sg.pin(self.server_port_auto),
              sg.Push(),
-             sg.Button("Apply", key=KEY_BTN_APPLY, tooltip="Apply and restart server.")],
+             self.server_apply_btn],
             [sg.Text("Status:", justification='right', size=7), self.osc_status_bar],
             [sg.Text('Haptic settings:', font='_ 14')],
             [sg.Push(), proximity_frame, velocity_frame, sg.Push()],
@@ -265,15 +287,21 @@ class GUIRenderer:
         self.layout.append([sg.HSep()])
         self.layout.append([sg.Text(message, text_color=self.theme_color_bad)])
 
-    def update_osc_status_bar(self, message, is_error=False):
+    def update_osc_status_bar(self, message, is_error=False, is_busy=False):
         text_color = self.theme_color_bad if is_error else self.theme_color_good
+        # Update cache
+        self.cache_osc_status_bar_text = message
+        self.cache_osc_status_bar_color = text_color
+        self.cache_server_apply_disabled = is_busy
         if self.window is None:
             self.osc_status_bar.DisplayText = message
             self.osc_status_bar.TextColor = text_color
+            self.server_apply_btn.Disabled = is_busy
             return
         if not self.shutting_down:
             try:
                 self.osc_status_bar.update(message, text_color=text_color)
+                self.server_apply_btn.update(disabled=is_busy)
             except Exception as e:
                 print("[GUI] Failed to update server status bar.")
 
@@ -324,6 +352,31 @@ class GUIRenderer:
             except Exception as e:
                 print("[GUI] Failed to update autostart status bar.")
 
+    def update_oscquery_state(self):
+        oscquery_available = False
+
+        if self.config.server_type == 0:
+            # First item is OSC (VRChat)
+            oscquery_available = True
+
+        oscquery_active = False
+        # Only count as active if also available
+        if oscquery_available:
+            oscquery_active = self.config.server_osc_oscquery
+
+        if self.window is None:
+            self.server_oscquery_chkbox.Visible = oscquery_available
+            self.server_port_input.Visible = not oscquery_active
+            self.server_port_auto.Visible = oscquery_active
+            return
+        if not self.shutting_down:
+            try:
+                self.server_oscquery_chkbox.update(visible=oscquery_available)
+                self.server_port_input.update(visible=not oscquery_active)
+                self.server_port_auto.update(visible=oscquery_active)
+            except Exception as e:
+                print("[GUI] Failed to update OSCQuery UI state.")
+
     def refresh(self):
         self.tracker_frame.contents_changed()
         self.tracker_frame.set_vscroll_position(1)
@@ -344,12 +397,11 @@ class GUIRenderer:
         # Start background refresh timer
         self.window.timer_start(TIMER_REFRESH_MS, key=KEY_TIMER_REFRESH, repeating=False)
 
+        # Sync up with config state
+        self.update_oscquery_state()
+
 
     def recreate_window(self):
-        # Cache OSC status
-        osc_status_bar_text = self.osc_status_bar.DisplayText
-        osc_status_bar_color = self.osc_status_bar.TextColor
-
         # Close window, recreate new layout and recreate window
         self.shutting_down = True
         self.window.close()
@@ -361,10 +413,6 @@ class GUIRenderer:
         # Refresh trackers/etc because it's too much of a pain to cache them and re-add them
         self.trackers = []
         self.refresh_vr_event()
-
-        # Manually re-add osc status
-        self.osc_status_bar.update(osc_status_bar_text, text_color=osc_status_bar_color)
-        self.osc_status_bar.TextColor = osc_status_bar_color
 
         # Mark layout as dirty
         self.layout_dirty = True
@@ -440,11 +488,15 @@ class GUIRenderer:
 
         # Update OSC Addresses
         self.config.server_type = LIST_SERVER_TYPE.index(values[KEY_SERVER_TYPE])
+        self.config.server_osc_oscquery = values[KEY_SERVER_OSCQUERY]
         self.config.server_ip = values[KEY_REC_IP]
         try:
             self.config.server_port = int(values[KEY_REC_PORT])
         except ValueError:
             pass
+
+        # Sync OSCQuery state
+        self.update_oscquery_state()
 
         # Update vibration intensity and pattern
         self.update_pattern_config(values, VibrationPattern.PROXIMITY, KEY_PROXIMITY)
