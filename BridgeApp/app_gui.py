@@ -25,6 +25,7 @@ KEY_BTN_ADD_EXTERNAL = '-BTN-ADD-EXTERNAL-'
 KEY_BATTERY_THRESHOLD = '-BATTERY-'
 KEY_START_WITH_STEAMVR = '-START-WITH-STEAMVR-'
 KEY_AUTOSTART_STATUS_BAR = '-AUTOSTART-STATUS-BAR-'
+KEY_START_MINIMIZED = '-START-MINIMIZED-'
 
 # Pattern Config
 KEY_PROXIMITY = '-PROXY-'
@@ -82,6 +83,7 @@ class GUIRenderer:
         self.layout = [
             [sg.Text('App settings:', font='_ 14')],
             [self.autostart_chkbox, sg.Push(), self.autostart_status_bar],
+            [sg.Checkbox("Start minimized", default=self.config.start_minimized, key=KEY_START_MINIMIZED, enable_events=True)],
             [sg.Text('Server settings:', font='_ 14')],
             [sg.Text("Type:", justification='right', size=7),
              sg.InputCombo(LIST_SERVER_TYPE, LIST_SERVER_TYPE[self.config.server_type], key=KEY_SERVER_TYPE, readonly=True)],
@@ -298,6 +300,9 @@ class GUIRenderer:
             self.window.set_min_size(self.window.size)
             # Expand from minimum size in Y direction
             self.window.size = (self.window.size[0], self.window.size[1] + 150)
+
+            if (self.config.start_minimized):
+                self.window.minimize()
             # Start background refresh timer
             self.window.timer_start(TIMER_REFRESH_MS, key=KEY_TIMER_REFRESH, repeating=False)
 
@@ -350,6 +355,8 @@ class GUIRenderer:
         self.config.start_with_steamvr = values[KEY_START_WITH_STEAMVR]
         if old_start_with_steamvr != self.config.start_with_steamvr:
             self.setup_autostart_event(self.config.start_with_steamvr)
+
+        self.config.start_minimized = values[KEY_START_MINIMIZED]
 
         # Update OSC Addresses
         self.config.server_type = LIST_SERVER_TYPE.index(values[KEY_SERVER_TYPE])

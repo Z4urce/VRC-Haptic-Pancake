@@ -82,6 +82,7 @@ class PatternConfig(BaseModel):
 class AppConfig(BaseModel):
     version: int = 2
     start_with_steamvr: bool = False
+    start_minimized: bool = False
     server_type: int = 0
     server_ip: str = "127.0.0.1"
     server_port: int = 9001
