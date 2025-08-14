@@ -80,8 +80,11 @@ def refresh_tracker_list(quiet_refresh=False):
     if vr is None or gui is None:
         return
 
-    for device in vr.query_devices(quiet_refresh):
-        gui.add_tracker(device.serial, device.model, True, quiet_refresh)
+    devices = vr.query_devices(quiet_refresh)
+    if devices:
+        devices.sort()
+        for device in devices:
+            gui.add_tracker(device.serial, device.model, True, quiet_refresh)
 
     #for serial, tracker_config in config.tracker_config_dict.items():
     #    gui.add_tracker(serial, "- OFFLINE", False, quiet_refresh)

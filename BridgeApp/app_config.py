@@ -2,6 +2,7 @@ import os.path
 import json
 import mmap
 import shutil
+from functools import total_ordering
 from pydantic import BaseModel
 from typing import Dict, List, Any
 
@@ -11,6 +12,7 @@ CONFIG_FILE_NAME: str = "hapticpancake-config.json"
 LEGACY_CONFIG_FILE_NAME: str = "config.json"
 
 # This is a runtime class for storing OVR trackers
+@total_ordering
 class VRTracker:
     index: int
     model: str
@@ -22,6 +24,12 @@ class VRTracker:
         self.model = model
         self.serial = serial
         self.pulse_multiplier = self.get_multiplier(model)
+
+    # Sort by serial number
+    def __eq__(self, other):
+        return self.serial == other.serial
+    def __lt__(self, other):
+        return self.serial < other.serial
 
     @staticmethod
     def get_multiplier(model: str):
