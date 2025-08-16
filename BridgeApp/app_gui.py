@@ -5,10 +5,45 @@ from app_config import AppConfig, PatternConfig
 from app_pattern import VibrationPattern
 
 WINDOW_NAME = "Haptic Pancake Bridge v0.8.0a"
+WINDOW_ICON = b'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpVIrDhYVcchQnezgB+JYqlgEC6Wt0KqDyaVf0KQhSXFxFFwLDn4sVh1cnHV1cBUEwQ8QZwcnRRcp8X9NoUWMB8f9eHfvcfcOEOplpppdEUDVLCMZi4qZ7Kroe0UvBjEEPyYlZurx1GIaruPrHh6+3oV5lvu5P0efkjMZ4BGJI0w3LOIN4tlNS+e8TxxkRUkhPieeMOiCxI9clx1+41xossAzg0Y6OU8cJBYLHSx3MCsaKvEMcUhRNcoXMg4rnLc4q+Uqa92TvzCQ01ZSXKc5ihiWEEcCImRUUUIZFsK0aqSYSNJ+1MU/0vQnyCWTqwRGjgVUoEJq+sH/4He3Zn56ykkKRIHuF9v+GAN8u0CjZtvfx7bdOAG8z8CV1vZX6sDcJ+m1thY6Avq3gYvrtibvAZc7wPCTLhlSU/LSFPJ54P2MvikLDNwC/jWnt9Y+Th+ANHW1fAMcHALjBcped3l3T2dv/55p9fcD3S9y0apk9h0AAAAGYktHRAD/AP8A/6C9p5MAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfoCxYXCzDoJVaPAAACuElEQVQ4y2WTTW8bdRDGfzO767f1xnGcJiSNVNoKqMoJgRBCwifuIHFFuSDRTwDi2CNfgC/gGxfElV6ockEISAJBiAJ5KVnqxk7idbx+ie39DwcngaqH0Wj0HJ756ZmRjz7940Ym0nCe1DMVnArZRbn/d+85bcMJ6744GqrUzYFimIAamMF5P8GCAC1GqAMDlFk3qItKQ9WsrmaoGd32LjYeMeg0edj4mOP9Hzj4/ku2v77PJO3MtPZj1GYmYlb31c1ch2ct5uZW6XZikpN9Rr02v377BenRNsuvvkfa2sUP5wlKFbJhDy1FmAm+GpiD6XkfRFGDfD7infc/p9XcobTwGbmoRpq2sKBI8VqNXjemUCijAr6YXa2kCL74RHOrEORYufkW5vk4haJlOAQFyDLUAAeqzhBn5IOQwMsxGfUo5MqMBwm++IjLmPQTovk1PFFGyVPCygpqhphdIBiUS4t0zg5ZWrqL84RcWL2KraTgVPEWb5KmLQIvT+bsWYThIKF1+BO9XpPDg+9YufU2raPfqCy/zOnJHvlyFcmVyMhYq65h/yGAOGA64cmjBxzHW/Tbf5Ec/c5Z6xFh+RphtESvfUAn3mFh+Q5yEbuYoZc3oAbVxZc4T2KiuRcYnP7N3dc/JCzVZjpGLiiyv/kVl6bqDPnk3o51ksc0n25SrFwn85TxdIRXiBi7Mc5Tpm5CYX6F5uGP5Mo1BoMON974AK8YzRCycUpn9yHd5i9M0xO6/2xzGm9ynsSEpRrZ8Ixee4+9b+5TrqzSP96buV8ieA5eefMeMh7Re/IzleqLyGSEOkcn3iKJt+i3/qR2612GpzGlcBFPfdSBL8bG/MLtulMhfO06mQoWBLMIRXCesnZn+sxnLtkUTzww2/AxWw+8fMOJ1NUv4Lzn39lXIVOu5kAFJ7rhnK3/C07bcJ2GHOyzAAAAAElFTkSuQmCC'
 
 # If changing order, also change update_oscquery_state()
 LIST_SERVER_TYPE = ["OSC (VRChat)", "WebSocket (Resonite)"]
 LIST_THEME = [] # Initialized in __init__
+
+KEY_PRESET_HEAD = "-BTN-PRESET-HEAD-"
+KEY_PRESET_ELBOW_LEFT = "-BTN-PRESET-ELBOW-LEFT-"
+KEY_PRESET_ELBOW_RIGHT = "-BTN-PRESET-ELBOW-RIGHT-"
+KEY_PRESET_CHEST = "-BTN-PRESET-CHEST-"
+KEY_PRESET_HIPS_CHEST = "-BTN-PRESET-HIPS-CHEST-"
+KEY_PRESET_HIPS = "-BTN-PRESET-HIPS-"
+KEY_PRESET_KNEE_LEFT = "-BTN-PRESET-KNEE-LEFT-"
+KEY_PRESET_KNEE_RIGHT = "-BTN-PRESET-KNEE-RIGHT-"
+KEY_PRESET_FOOT_LEFT = "-BTN-PRESET-FOOT-LEFT-"
+KEY_PRESET_FOOT_RIGHT = "-BTN-PRESET-FOOT-RIGHT-"
+# TODO: What names make sense for Resonite?  Could adapt based on server type
+PRESET_ADDRESSES = {
+    KEY_PRESET_HEAD:
+        "/avatar/parameters/HapticHead",
+    KEY_PRESET_ELBOW_LEFT:
+        "/avatar/parameters/HapticElbowLeft",
+    KEY_PRESET_ELBOW_RIGHT:
+        "/avatar/parameters/HapticElbowRight",
+    KEY_PRESET_CHEST:
+        "/avatar/parameters/HapticChest",
+    KEY_PRESET_HIPS_CHEST:
+        "/avatar/parameters/HapticHips;/avatar/parameters/HapticChest",
+    KEY_PRESET_HIPS:
+        "/avatar/parameters/HapticHips",
+    KEY_PRESET_KNEE_LEFT:
+        "/avatar/parameters/HapticKneeLeft",
+    KEY_PRESET_KNEE_RIGHT:
+        "/avatar/parameters/HapticKneeRight",
+    KEY_PRESET_FOOT_LEFT:
+        "/avatar/parameters/HapticFootLeft",
+    KEY_PRESET_FOOT_RIGHT:
+        "/avatar/parameters/HapticFootRight",
+    }
 
 KEY_SERVER_TYPE = '-SERVER-TYPE-'
 KEY_SERVER_OSCQUERY = '-SERVER-OSCQUERY-'
@@ -23,6 +58,7 @@ KEY_TRACKER_STATUS_BAR = '-TRACKER-STATUS-BAR-'
 KEY_LAYOUT_TRACKERS = '-LAYOUT-TRACKERS-'
 KEY_OSC_ADDRESS = '-ADDRESS-OF-'
 KEY_VIB_STR_OVERRIDE = '-VIB-STR-'
+KEY_BTN_SETUP = '-BTN-SETUP-'
 KEY_BTN_TEST = '-BTN-TEST-'
 KEY_BTN_CALIBRATE = '-BTN-CALIBRATE-'
 KEY_BTN_ADD_EXTERNAL = '-BTN-ADD-EXTERNAL-'
@@ -45,6 +81,9 @@ KEY_VIB_SPEED = '-VIB-SPD-'
 # Background refresh
 KEY_TIMER_REFRESH = '-TIMER-REFRESH-'
 TIMER_REFRESH_MS = 10 * 1000
+
+# Resaving config
+KEY_SAVE_TO_CONFIG = '-FAUX-SAVE-EVENT-'
 
 # If changing this, also update app_config.py!
 DEFAULT_THEME="DarkAmber"
@@ -209,10 +248,12 @@ class GUIRenderer:
             [sg.Checkbox('', default=True, disabled=True, pad=0), sg.Text(icon, text_color=color, pad=0), sg.Text(string, pad=(0, 0))],
             [sg.Text(" "), sg.Text("Address:"),
              sg.InputText(address, k=(KEY_OSC_ADDRESS, tracker_serial),
-                          enable_events=True, size=36,
+                          enable_events=True, size=30, pad=((0,5), (0,0)),
                           tooltip="OSC Address or Resonite Address"),
+             sg.Button("Setup", k=(KEY_BTN_SETUP, tracker_serial),
+                           tooltip="Set tracker address to a standard preset (e.g. Left Foot)", pad=1, size=5),
              sg.Button("Identify", k=(KEY_BTN_TEST, tracker_serial),
-                       tooltip="Send a 500ms pulse to the tracker")],
+                       tooltip="Send a 500ms pulse to the tracker", size=5)],
             additional_layout]
 
         row = [sg.pin(sg.Col(layout, key=('-ROW-', tracker_serial)))]
@@ -388,7 +429,7 @@ class GUIRenderer:
 
 
     def create_window(self):
-        self.window = sg.Window(WINDOW_NAME, self.layout, keep_on_top=False, finalize=True, alpha_channel=1, icon=b'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpVIrDhYVcchQnezgB+JYqlgEC6Wt0KqDyaVf0KQhSXFxFFwLDn4sVh1cnHV1cBUEwQ8QZwcnRRcp8X9NoUWMB8f9eHfvcfcOEOplpppdEUDVLCMZi4qZ7Kroe0UvBjEEPyYlZurx1GIaruPrHh6+3oV5lvu5P0efkjMZ4BGJI0w3LOIN4tlNS+e8TxxkRUkhPieeMOiCxI9clx1+41xossAzg0Y6OU8cJBYLHSx3MCsaKvEMcUhRNcoXMg4rnLc4q+Uqa92TvzCQ01ZSXKc5ihiWEEcCImRUUUIZFsK0aqSYSNJ+1MU/0vQnyCWTqwRGjgVUoEJq+sH/4He3Zn56ykkKRIHuF9v+GAN8u0CjZtvfx7bdOAG8z8CV1vZX6sDcJ+m1thY6Avq3gYvrtibvAZc7wPCTLhlSU/LSFPJ54P2MvikLDNwC/jWnt9Y+Th+ANHW1fAMcHALjBcped3l3T2dv/55p9fcD3S9y0apk9h0AAAAGYktHRAD/AP8A/6C9p5MAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfoCxYXCzDoJVaPAAACuElEQVQ4y2WTTW8bdRDGfzO767f1xnGcJiSNVNoKqMoJgRBCwifuIHFFuSDRTwDi2CNfgC/gGxfElV6ockEISAJBiAJ5KVnqxk7idbx+ie39DwcngaqH0Wj0HJ756ZmRjz7940Ym0nCe1DMVnArZRbn/d+85bcMJ6744GqrUzYFimIAamMF5P8GCAC1GqAMDlFk3qItKQ9WsrmaoGd32LjYeMeg0edj4mOP9Hzj4/ku2v77PJO3MtPZj1GYmYlb31c1ch2ct5uZW6XZikpN9Rr02v377BenRNsuvvkfa2sUP5wlKFbJhDy1FmAm+GpiD6XkfRFGDfD7infc/p9XcobTwGbmoRpq2sKBI8VqNXjemUCijAr6YXa2kCL74RHOrEORYufkW5vk4haJlOAQFyDLUAAeqzhBn5IOQwMsxGfUo5MqMBwm++IjLmPQTovk1PFFGyVPCygpqhphdIBiUS4t0zg5ZWrqL84RcWL2KraTgVPEWb5KmLQIvT+bsWYThIKF1+BO9XpPDg+9YufU2raPfqCy/zOnJHvlyFcmVyMhYq65h/yGAOGA64cmjBxzHW/Tbf5Ec/c5Z6xFh+RphtESvfUAn3mFh+Q5yEbuYoZc3oAbVxZc4T2KiuRcYnP7N3dc/JCzVZjpGLiiyv/kVl6bqDPnk3o51ksc0n25SrFwn85TxdIRXiBi7Mc5Tpm5CYX6F5uGP5Mo1BoMON974AK8YzRCycUpn9yHd5i9M0xO6/2xzGm9ynsSEpRrZ8Ixee4+9b+5TrqzSP96buV8ieA5eefMeMh7Re/IzleqLyGSEOkcn3iKJt+i3/qR2612GpzGlcBFPfdSBL8bG/MLtulMhfO06mQoWBLMIRXCesnZn+sxnLtkUTzww2/AxWw+8fMOJ1NUv4Lzn39lXIVOu5kAFJ7rhnK3/C07bcJ2GHOyzAAAAAElFTkSuQmCC')
+        self.window = sg.Window(WINDOW_NAME, self.layout, keep_on_top=False, finalize=True, alpha_channel=1, icon=WINDOW_ICON)
 
         self.window.set_resizable(False, True)
 
@@ -451,6 +492,8 @@ class GUIRenderer:
             return False
         if event[0] == KEY_BTN_TEST:
             self.tracker_test_event(event[1])
+        elif event[0] == KEY_BTN_SETUP:
+            self.setup_tracker_preset(event[1])
         elif event == KEY_BTN_ADD_EXTERNAL:
             self.add_external_event(values[KEY_BTN_ADD_EXTERNAL])
         elif event == KEY_BTN_APPLY:
@@ -472,6 +515,88 @@ class GUIRenderer:
             self.window.timer_start(TIMER_REFRESH_MS, key=KEY_TIMER_REFRESH, repeating=False)
 
         return True
+
+    def popup_pick_address_preset(self, tracker_serial):
+        """GUI to pick a tracker location preset"""
+        button_size = 12
+        location_layout = [
+            [sg.Push(),
+             sg.Button('Head', key=KEY_PRESET_HEAD, size=button_size, tooltip=f"Head, including VR headset\nParameter: {PRESET_ADDRESSES[KEY_PRESET_HEAD]}"),
+             sg.Push()],
+            [self.small_vertical_space()],
+            [sg.Button('Left Elbow', key=KEY_PRESET_ELBOW_LEFT, size=button_size, tooltip=f"Left elbow, arm, or shoulder\nParameter: {PRESET_ADDRESSES[KEY_PRESET_ELBOW_LEFT]}"),
+             sg.Push(),
+             sg.Button('Chest', key=KEY_PRESET_CHEST, size=button_size, tooltip=f"Chest, upper body\nUse this when you have separate haptic devices for Chest and Hips\nParameter: {PRESET_ADDRESSES[KEY_PRESET_CHEST]}"),
+             sg.Push(),
+             sg.Button('Right Elbow', key=KEY_PRESET_ELBOW_RIGHT, size=button_size, tooltip=f"Right elbow, arm, or shoulder\nParameter: {PRESET_ADDRESSES[KEY_PRESET_ELBOW_RIGHT]}")],
+            [self.small_vertical_space()],
+            [sg.Push(),
+             sg.Button('Hips + Chest', key=KEY_PRESET_HIPS_CHEST, size=button_size, tooltip=f"Chest and hips, full torso (combined into one)\nUse this when you only have one haptic device for Chest and Hips\nParameter: {PRESET_ADDRESSES[KEY_PRESET_HIPS_CHEST]}"),
+             sg.Push()],
+            [sg.Push(),
+             sg.Text("(combines Hips and Chest to one device)"),
+             sg.Push()],
+            [self.small_vertical_space()],
+            [sg.Push(),
+             sg.Button('Hips', key=KEY_PRESET_HIPS, size=button_size, tooltip=f"Hips, belly, lower body\nUse this when you have separate haptic devices for Chest and Hips\nParameter: {PRESET_ADDRESSES[KEY_PRESET_HIPS]}"),
+             sg.Push()],
+            [self.small_vertical_space()],
+            [sg.Button('Left Knee', key=KEY_PRESET_KNEE_LEFT, size=button_size, tooltip=f"Left knee, leg, thigh or shin\nParameter: {PRESET_ADDRESSES[KEY_PRESET_KNEE_LEFT]}"),
+             sg.Push(),
+             sg.Button('Right Knee', key=KEY_PRESET_KNEE_RIGHT, size=button_size, tooltip=f"Right knee, leg, thigh or shin\nParameter: {PRESET_ADDRESSES[KEY_PRESET_KNEE_RIGHT]}")],
+            [self.small_vertical_space()],
+            [sg.Button('Left Foot', key=KEY_PRESET_FOOT_LEFT, size=button_size, tooltip=f"Left foot / paw, ankle, lower leg\nParameter: {PRESET_ADDRESSES[KEY_PRESET_FOOT_LEFT]}"),
+             sg.Push(),
+             sg.Button('Right Foot', key=KEY_PRESET_FOOT_RIGHT, size=button_size, tooltip=f"Right foot / paw, ankle, lower leg\nParameter: {PRESET_ADDRESSES[KEY_PRESET_FOOT_RIGHT]}")],
+        ]
+
+        preset_layout = [
+            [sg.Text(f"1.  Find your haptics device", font='_ 14')],
+            [sg.Button('Identify', key=KEY_BTN_TEST, size=button_size, pad=((12,0),(0,0))),
+             sg.Text("Click for a brief vibration pulse.")],
+            [sg.Text('2.  Where do you wear this?', font='_ 14')],
+            [sg.Frame("Pick a location:", layout=location_layout, expand_x=True, expand_y=True)],
+            [sg.Text(f"Device: {tracker_serial}"), sg.Push(), sg.Cancel()],
+        ]
+
+        window = sg.Window("Set up haptics address", preset_layout, keep_on_top=True, finalize=True, modal=True, icon=WINDOW_ICON)
+        # Py/FreeSimpleGUI doesn't have real modal windows, so set keep_on_top
+        # to help avoid losing the dialog box.
+
+        # Center window on mouse cursor
+        loc_mid_x = window.size[0] / 2
+        loc_mid_y = window.size[1] / 2
+        mouse_loc = window.mouse_location()
+        window.move(int(mouse_loc[0] - loc_mid_x), int(mouse_loc[1] - loc_mid_y))
+        # Don't allow resizing
+        window.set_resizable(False, False)
+
+        # Close on Escape key
+        window.bind("<Escape>", "-ESCAPE-")
+
+        while True:
+            # Wait for event
+            event, values = window.read()
+            if event in PRESET_ADDRESSES:
+                window.close()
+                return PRESET_ADDRESSES[event]
+            elif event == KEY_BTN_TEST:
+                self.tracker_test_event(tracker_serial)
+            else:
+                window.close()
+                return None
+
+    def setup_tracker_preset(self, tracker_serial):
+        # Find value if possible
+        address_widget = (KEY_OSC_ADDRESS, tracker_serial)
+        if not self.window.key_is_good(address_widget):
+            print(f"[GUI] Could not find address input widget for tracker {tracker_serial}!")
+
+        new_address = self.popup_pick_address_preset(tracker_serial)
+        if new_address:
+            self.window[address_widget].update(new_address)
+            # Run another iteration to make sure this gets applied
+            self.window.write_event_value(KEY_SAVE_TO_CONFIG, "")
 
     def update_values(self, values):
         # print(f"Values: {values}")
