@@ -16,7 +16,8 @@ KEY_REC_IP = '-REC-IP-'
 KEY_REC_PORT = '-REC-PORT-'
 KEY_BTN_APPLY = '-BTN-APPLY-'
 KEY_BTN_REFRESH = '-BTN-REFRESH'
-KEY_OPEN_URL = '-OPENURL'
+KEY_OPEN_URL_HOME= '-OPENURL'
+KEY_OPEN_URL_DONATE = '-OPENDONATE'
 KEY_OSC_STATUS_BAR = '-OSC-STATUS-BAR-'
 KEY_TRACKER_STATUS_BAR = '-TRACKER-STATUS-BAR-'
 KEY_LAYOUT_TRACKERS = '-LAYOUT-TRACKERS-'
@@ -159,7 +160,9 @@ class GUIRenderer:
             # add_external_button],
             [self.tracker_frame],
             [sg.HSep()],
-            [sg.Text("Made by BIT FOX DEN / Zelus", enable_events=True, font='Default 8 underline', key=KEY_OPEN_URL), sg.Sizegrip()],
+            [sg.Text("Made by BIT FOX DEN / Zelus", enable_events=True, font='Default 8 underline', key=KEY_OPEN_URL_HOME), sg.Push(),
+             sg.Text("Enjoy Haptic Pancake?  Consider donating", enable_events=True, font='Default 8 underline', key=KEY_OPEN_URL_DONATE),
+             sg.Sizegrip()],
         ]
 
     @staticmethod
@@ -400,6 +403,10 @@ class GUIRenderer:
         # Sync up with config state
         self.update_oscquery_state()
 
+        # Set hand cursor
+        self.window[KEY_OPEN_URL_DONATE].set_cursor("hand1")
+        self.window[KEY_OPEN_URL_HOME].set_cursor("hand1")
+
 
     def recreate_window(self):
         # Close window, recreate new layout and recreate window
@@ -455,8 +462,10 @@ class GUIRenderer:
                 self.recreate_window()
         elif event == KEY_BTN_REFRESH:
             self.refresh_vr_event()
-        elif event == KEY_OPEN_URL:
+        elif event == KEY_OPEN_URL_HOME:
             webbrowser.open("https://hapticpancake.com/")
+        elif event == KEY_OPEN_URL_DONATE:
+            webbrowser.open("https://hapticpancake.com/donate")
         elif event == KEY_TIMER_REFRESH:
             # Quietly refresh on timer elapse
             self.refresh_vr_event(quiet_refresh=True)
