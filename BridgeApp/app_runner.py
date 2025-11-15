@@ -82,6 +82,9 @@ class FeedbackThread(threading.Thread):
         except ValueError:
             strength = 0.0
 
+        # If below 0.0, use 0.0
+        strength = max(strength, 0.0)
+
         self.strength_delta += abs(strength - self.strength)
         self.strength = strength
         self.last_str_set_time = time.time()

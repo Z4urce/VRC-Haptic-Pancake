@@ -32,13 +32,13 @@ class ResoniteWebSocketServer(ServerBase):
         self.print_status("Thread ended.")
 
     def start_server(self):
-        self.print_status("Creating thread.")
+        self.print_status("Starting...", True, True, True)
         self.server = websockets.sync.server.serve(self.message_received, self.config.server_ip, self.config.server_port)
         self.thread = threading.Thread(target=self.thread_main)
         self.thread.start()
 
     def shutdown(self):
-        self.print_status("Shutting down...", True)
+        self.print_status("Shutting down...", True, True, True)
         if self.server is not None:
             self.server.shutdown()
         if self.thread is not None:
@@ -46,11 +46,11 @@ class ResoniteWebSocketServer(ServerBase):
         self.print_status("Shutdown completed.")
 
     def restart_server(self):
-        self.print_status("Restarting...", True)
+        self.print_status("Restarting...", True, True, True)
         self.shutdown()
         self.start_server()
 
-    def print_status(self, text, update_status_bar=False, is_error=False):
+    def print_status(self, text, update_status_bar=False, is_error=False, is_busy=False):
         print(f"[WebSocket] {text}")
         if update_status_bar:
-            self.status_update(text, is_error)
+            self.status_update(text, is_error, is_busy)

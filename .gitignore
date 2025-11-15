@@ -1,6 +1,9 @@
 .idea/
 __pycache__/
 [Ii]gnored*/
-config.json
 [Bb]uild/
 [Ddist]/
+
+# Config files
+config.json
+hapticpancake-config.json

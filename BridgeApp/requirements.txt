@@ -1,7 +1,8 @@
-freesimplegui~=5.1.0
-openvr~=1.26.701
-pydantic~=2.8.0
+freesimplegui~=5.2.0.post1
+openvr~=2.12.1401
+platformdirs~=4.3.8
+pydantic~=2.11.7
 pyserial~=3.5
-python-osc~=1.8.3
-setuptools~=75.3
-websockets~=12.0
+python-osc~=1.9.3
+tinyoscquery @ git+https://github.com/cyberkitsune/tinyoscquery@5765a85b0d83da41b8266f75dfd3c99f0dec4411
+websockets~=15.0.1

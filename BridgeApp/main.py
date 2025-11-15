@@ -3,12 +3,12 @@ from app_gui import GUIRenderer
 from server_base import ServerBase
 from server_osc import VRChatOSCReceiver
 from server_websocket import ResoniteWebSocketServer
-from target_ovr import OpenVRTracker
+from target_ovr import OpenVRHandler
 import traceback
 import platform
 
 bridge_server: ServerBase = None
-vr: OpenVRTracker = None
+vr: OpenVRHandler = None
 config: AppConfig = None
 gui: GUIRenderer = None
 external_id: int = 0
@@ -26,7 +26,7 @@ def main():
 
     # Init GUI
     global gui
-    gui = GUIRenderer(config, pulse_test, restart_bridge_server, refresh_tracker_list, add_external_target)
+    gui = GUIRenderer(config, pulse_test, restart_bridge_server, refresh_vr, add_external_target, setup_autostart)
     print("[Main] GUI initialized")
 
     # Start the Server
@@ -36,13 +36,10 @@ def main():
 
     # Init OpenVR
     global vr
-    vr = OpenVRTracker(config)
+    vr = OpenVRHandler(config)
 
-    # Add trackers to GUI
-    refresh_tracker_list()
-
-    # Add footer
-    gui.add_footer()
+    # Add trackers to GUI, update status
+    refresh_vr()
 
     # Main GUI loop here
     while gui.run():
@@ -71,12 +68,23 @@ def restart_bridge_server():
     start_bridge_server()
 
 
+def refresh_vr(quiet_refresh=False):
+    if vr is None or gui is None:
+        return
+
+    refresh_tracker_list(quiet_refresh)
+    refresh_autostart_status(quiet_refresh)
+
+
 def refresh_tracker_list(quiet_refresh=False):
     if vr is None or gui is None:
         return
 
-    for device in vr.query_devices(quiet_refresh):
-        gui.add_tracker(device.serial, device.model, True, quiet_refresh)
+    devices = vr.query_devices(quiet_refresh)
+    if devices:
+        devices.sort()
+        for device in devices:
+            gui.add_tracker(device.serial, device.model, True, quiet_refresh)
 
     #for serial, tracker_config in config.tracker_config_dict.items():
     #    gui.add_tracker(serial, "- OFFLINE", False, quiet_refresh)
@@ -89,6 +97,20 @@ def refresh_tracker_list(quiet_refresh=False):
         print("[Main] Tracker list refreshed")
 
     gui.update_tracker_counts()
+
+
+def refresh_autostart_status(quiet_refresh=False):
+    if vr is None or gui is None:
+        return
+
+    if vr.is_alive:
+        # Only check when VR is available
+        if vr.resync_autostart():
+            # Update with auto-launch config when changed
+            gui.update_autostart_active(config.start_with_steamvr)
+
+    # Always update VR runtime status
+    gui.update_autostart_status(vr.is_alive, vr.is_app_bundled)
 
 
 def add_external_target(external_type):
@@ -118,6 +140,8 @@ def param_received(address, value):
         if  address in tracker_config.address_list:
             vr.set_strength(serial, value)
 
+def setup_autostart(autostart: bool):
+    vr.setup_autostart(autostart=autostart)
 
 if __name__ == '__main__':
     try:
