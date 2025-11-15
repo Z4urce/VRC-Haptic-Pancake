@@ -7,7 +7,7 @@ A dirt cheap solution to enable haptic feedback on the Vive trackers in VRChat a
 
 Curious about the development? Have any questions? Join the discord!
 
-[![Discord](https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/DEWbQHqbRS)
+[![Discord](https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/FnnDDrYtyJ)
 
 # How to make
 [> Check out the Wiki for a full guide! <](https://github.com/Z4urce/VRC-Haptic-Pancake/wiki)

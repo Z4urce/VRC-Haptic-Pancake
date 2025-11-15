@@ -3,6 +3,7 @@ __pycache__/
 [Ii]gnored*/
 [Bb]uild/
 [Ddist]/
+dist/
 
 # Config files
 config.json
