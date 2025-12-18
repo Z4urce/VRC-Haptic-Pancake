@@ -101,6 +101,8 @@ class AppConfig(BaseModel):
     server_ip: str = "127.0.0.1"
     server_port: int = 9001
     pattern_config_list: List[PatternConfig] = []
+    no_data_enabled: bool = True
+    no_data_timeout: int = 15
     tracker_config_dict: Dict[str, TrackerConfig] = {}
 
     # OBSOLETE - Will delete these in the next version
