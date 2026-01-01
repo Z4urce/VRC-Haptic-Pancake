@@ -4,7 +4,7 @@ import webbrowser
 from app_config import AppConfig, PatternConfig
 from app_pattern import VibrationPattern
 
-WINDOW_NAME = "Haptic Pancake Bridge v0.8.0-beta.1"
+WINDOW_NAME = "Haptic Pancake Bridge v0.8.0-beta.2"
 WINDOW_ICON = b'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpVIrDhYVcchQnezgB+JYqlgEC6Wt0KqDyaVf0KQhSXFxFFwLDn4sVh1cnHV1cBUEwQ8QZwcnRRcp8X9NoUWMB8f9eHfvcfcOEOplpppdEUDVLCMZi4qZ7Kroe0UvBjEEPyYlZurx1GIaruPrHh6+3oV5lvu5P0efkjMZ4BGJI0w3LOIN4tlNS+e8TxxkRUkhPieeMOiCxI9clx1+41xossAzg0Y6OU8cJBYLHSx3MCsaKvEMcUhRNcoXMg4rnLc4q+Uqa92TvzCQ01ZSXKc5ihiWEEcCImRUUUIZFsK0aqSYSNJ+1MU/0vQnyCWTqwRGjgVUoEJq+sH/4He3Zn56ykkKRIHuF9v+GAN8u0CjZtvfx7bdOAG8z8CV1vZX6sDcJ+m1thY6Avq3gYvrtibvAZc7wPCTLhlSU/LSFPJ54P2MvikLDNwC/jWnt9Y+Th+ANHW1fAMcHALjBcped3l3T2dv/55p9fcD3S9y0apk9h0AAAAGYktHRAD/AP8A/6C9p5MAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfoCxYXCzDoJVaPAAACuElEQVQ4y2WTTW8bdRDGfzO767f1xnGcJiSNVNoKqMoJgRBCwifuIHFFuSDRTwDi2CNfgC/gGxfElV6ockEISAJBiAJ5KVnqxk7idbx+ie39DwcngaqH0Wj0HJ756ZmRjz7940Ym0nCe1DMVnArZRbn/d+85bcMJ6744GqrUzYFimIAamMF5P8GCAC1GqAMDlFk3qItKQ9WsrmaoGd32LjYeMeg0edj4mOP9Hzj4/ku2v77PJO3MtPZj1GYmYlb31c1ch2ct5uZW6XZikpN9Rr02v377BenRNsuvvkfa2sUP5wlKFbJhDy1FmAm+GpiD6XkfRFGDfD7infc/p9XcobTwGbmoRpq2sKBI8VqNXjemUCijAr6YXa2kCL74RHOrEORYufkW5vk4haJlOAQFyDLUAAeqzhBn5IOQwMsxGfUo5MqMBwm++IjLmPQTovk1PFFGyVPCygpqhphdIBiUS4t0zg5ZWrqL84RcWL2KraTgVPEWb5KmLQIvT+bsWYThIKF1+BO9XpPDg+9YufU2raPfqCy/zOnJHvlyFcmVyMhYq65h/yGAOGA64cmjBxzHW/Tbf5Ec/c5Z6xFh+RphtESvfUAn3mFh+Q5yEbuYoZc3oAbVxZc4T2KiuRcYnP7N3dc/JCzVZjpGLiiyv/kVl6bqDPnk3o51ksc0n25SrFwn85TxdIRXiBi7Mc5Tpm5CYX6F5uGP5Mo1BoMON974AK8YzRCycUpn9yHd5i9M0xO6/2xzGm9ynsSEpRrZ8Ixee4+9b+5TrqzSP96buV8ieA5eefMeMh7Re/IzleqLyGSEOkcn3iKJt+i3/qR2612GpzGlcBFPfdSBL8bG/MLtulMhfO06mQoWBLMIRXCesnZn+sxnLtkUTzww2/AxWw+8fMOJ1NUv4Lzn39lXIVOu5kAFJ7rhnK3/C07bcJ2GHOyzAAAAAElFTkSuQmCC'
 
 # If changing order, also change update_oscquery_state()
@@ -68,6 +68,8 @@ KEY_AUTOSTART_STATUS_BAR = '-AUTOSTART-STATUS-BAR-'
 KEY_START_MINIMIZED = '-START-MINIMIZED-'
 KEY_THEME = '-THEME-'
 KEY_BTN_THEME_RESET = '-BTN-THEME-RESET-'
+KEY_NO_DATA_ENABLED = '-NO-DATA-ENABLED-'
+KEY_NO_DATA_TIMEOUT = '-NO-DATA-TIMEOUT-'
 
 # Pattern Config
 KEY_PROXIMITY = '-PROXY-'
@@ -173,6 +175,10 @@ class GUIRenderer:
         self.server_port_auto = sg.Text("[automatic]", size=13, visible=False)
         self.server_apply_btn = sg.Button("Apply", key=KEY_BTN_APPLY, tooltip="Apply and restart server.", disabled=self.cache_server_apply_disabled)
 
+        self.no_data_timeout = sg.Spin(
+            [num for num in range(1, 601)], self.config.no_data_timeout, size=4, pad=((0,3),(0,0)),
+            key=KEY_NO_DATA_TIMEOUT, enable_events=True, disabled=not self.config.no_data_enabled)
+
         self.layout = [
             [sg.Text('App settings:', font='_ 14')],
             [self.autostart_chkbox, sg.Push(), self.autostart_status_bar],
@@ -194,7 +200,11 @@ class GUIRenderer:
             [sg.Text("Status:", justification='right', size=7), self.osc_status_bar],
             [sg.Text('Haptic settings:', font='_ 14')],
             [sg.Push(), proximity_frame, velocity_frame, sg.Push()],
-            [self.small_vertical_space()],
+            [sg.Checkbox("Stop stuck haptics after", default=self.config.no_data_enabled, key=KEY_NO_DATA_ENABLED, enable_events=True),
+             self.no_data_timeout,
+             sg.Text("(seconds)")],
+            # Padding from "Stop stuck haptics" checkbox removes the need for this:
+            #[self.small_vertical_space()],
             [sg.Text('Devices:', font='_ 14'), self.tracker_status_bar, sg.Push(), sg.Button("Refresh", key=KEY_BTN_REFRESH)],
             # add_external_button],
             [self.tracker_frame],
@@ -421,6 +431,17 @@ class GUIRenderer:
             except Exception as e:
                 print("[GUI] Failed to update OSCQuery UI state.")
 
+    def update_no_data_status(self, is_enabled):
+        if self.window is None:
+            self.no_data_timeout.Disabled = not is_enabled
+            return
+        if not self.shutting_down:
+            try:
+                self.no_data_timeout.update(disabled=not is_enabled)
+            except Exception as e:
+                print(e)
+                print("[GUI] Failed to update no data timeout input.")
+
     def refresh(self):
         self.tracker_frame.contents_changed()
         self.tracker_frame.set_vscroll_position(1)
@@ -635,6 +656,14 @@ class GUIRenderer:
         # Update vibration intensity and pattern
         self.update_pattern_config(values, VibrationPattern.PROXIMITY, KEY_PROXIMITY)
         self.update_pattern_config(values, VibrationPattern.VELOCITY, KEY_VELOCITY)
+        self.config.no_data_enabled = values[KEY_NO_DATA_ENABLED]
+        try:
+            self.config.no_data_timeout = int(values[KEY_NO_DATA_TIMEOUT])
+        except ValueError:
+            pass
+        # Sync spinbox enable state
+        self.update_no_data_status(self.config.no_data_enabled)
+
         self.config.save()
 
     def update_tracker_config(self, values, tracker: str):

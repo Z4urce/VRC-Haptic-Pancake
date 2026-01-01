@@ -89,6 +89,35 @@ class FeedbackThread(threading.Thread):
         self.strength = strength
         self.last_str_set_time = time.time()
 
+    def clear_stuck_strength(self):
+        if self.strength == 0 or not self.config.no_data_enabled:
+            # Skip if not vibrating or handling of no data is not enabled
+            return
+
+        # If strength is between 0 and 1, after X seconds, reset strength to 0
+        delay_active = self.config.no_data_timeout
+        # If strength = 1, after X seconds, reset strength to 0
+        delay_peaked = delay_active
+        # NOTE: Early experimentation tried to distinguish between 0.0 - 1.0
+        # and being pegged at 1.0.  That didn't pan out as desired.
+        #
+        # For future reference:
+        # 7s active, 15s peak seemed to work okay interacting with VR FBT users
+        # 9s active, 25s peak kind of worked for interacting with desktop users
+
+        time_since_set = time.time() - self.last_str_set_time
+
+        # Reset stuck strength values after a delay so vibration won't
+        # get stuck on (e.g. if sending program crashed)
+        if (self.strength < 1 and time_since_set >= delay_active):
+            print(f"[VibrationManager] {self.tracker.serial} stuck active for {round(time_since_set, 2)} secs, clearing")
+            self.set_strength(0)
+            return
+        elif (self.strength == 1 and time_since_set >= delay_peaked):
+            print(f"[VibrationManager] {self.tracker.serial} stuck at peak for {round(time_since_set, 2)} secs, clearing")
+            self.set_strength(0)
+            return
+
     def run(self):
         print(f"[VibrationManager] Thread started for {self.tracker.serial}")
 
@@ -96,6 +125,8 @@ class FeedbackThread(threading.Thread):
             start_time = time.time()
 
             pulse_length = 0
+
+            self.clear_stuck_strength()
 
             strength = self.calculate_strength(start_time)
             if strength > 0:
