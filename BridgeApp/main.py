@@ -135,10 +135,18 @@ def add_external_target(external_type):
 
 
 def param_received(address, value):
-    # value is the floating value (0..1) that determines how intense the feedback should be
-    for serial, tracker_config in config.tracker_config_dict.items():
-        if  address in tracker_config.address_list:
-            vr.set_strength(serial, value)
+    # Pass all types to debug viewer
+    gui.debug_params_received(address, value)
+
+    # Only allow floating point values for haptics
+    try:
+        float_value = float(value)
+        # floating value (0..1) that determines how intense feedback should be
+        for serial, tracker_config in config.tracker_config_dict.items():
+            if  address in tracker_config.address_list:
+                vr.set_strength(serial, float_value)
+    except ValueError:
+        pass
 
 def setup_autostart(autostart: bool):
     vr.setup_autostart(autostart=autostart)
