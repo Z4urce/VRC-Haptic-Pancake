@@ -4,7 +4,7 @@ import webbrowser
 from app_config import AppConfig, PatternConfig
 from app_pattern import VibrationPattern
 
-WINDOW_NAME = "Haptic Pancake Bridge v0.8.0-beta.2"
+WINDOW_NAME = "Haptic Pancake Bridge v0.8.0-beta.3"
 WINDOW_ICON = b'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpVIrDhYVcchQnezgB+JYqlgEC6Wt0KqDyaVf0KQhSXFxFFwLDn4sVh1cnHV1cBUEwQ8QZwcnRRcp8X9NoUWMB8f9eHfvcfcOEOplpppdEUDVLCMZi4qZ7Kroe0UvBjEEPyYlZurx1GIaruPrHh6+3oV5lvu5P0efkjMZ4BGJI0w3LOIN4tlNS+e8TxxkRUkhPieeMOiCxI9clx1+41xossAzg0Y6OU8cJBYLHSx3MCsaKvEMcUhRNcoXMg4rnLc4q+Uqa92TvzCQ01ZSXKc5ihiWEEcCImRUUUIZFsK0aqSYSNJ+1MU/0vQnyCWTqwRGjgVUoEJq+sH/4He3Zn56ykkKRIHuF9v+GAN8u0CjZtvfx7bdOAG8z8CV1vZX6sDcJ+m1thY6Avq3gYvrtibvAZc7wPCTLhlSU/LSFPJ54P2MvikLDNwC/jWnt9Y+Th+ANHW1fAMcHALjBcped3l3T2dv/55p9fcD3S9y0apk9h0AAAAGYktHRAD/AP8A/6C9p5MAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfoCxYXCzDoJVaPAAACuElEQVQ4y2WTTW8bdRDGfzO767f1xnGcJiSNVNoKqMoJgRBCwifuIHFFuSDRTwDi2CNfgC/gGxfElV6ockEISAJBiAJ5KVnqxk7idbx+ie39DwcngaqH0Wj0HJ756ZmRjz7940Ym0nCe1DMVnArZRbn/d+85bcMJ6744GqrUzYFimIAamMF5P8GCAC1GqAMDlFk3qItKQ9WsrmaoGd32LjYeMeg0edj4mOP9Hzj4/ku2v77PJO3MtPZj1GYmYlb31c1ch2ct5uZW6XZikpN9Rr02v377BenRNsuvvkfa2sUP5wlKFbJhDy1FmAm+GpiD6XkfRFGDfD7infc/p9XcobTwGbmoRpq2sKBI8VqNXjemUCijAr6YXa2kCL74RHOrEORYufkW5vk4haJlOAQFyDLUAAeqzhBn5IOQwMsxGfUo5MqMBwm++IjLmPQTovk1PFFGyVPCygpqhphdIBiUS4t0zg5ZWrqL84RcWL2KraTgVPEWb5KmLQIvT+bsWYThIKF1+BO9XpPDg+9YufU2raPfqCy/zOnJHvlyFcmVyMhYq65h/yGAOGA64cmjBxzHW/Tbf5Ec/c5Z6xFh+RphtESvfUAn3mFh+Q5yEbuYoZc3oAbVxZc4T2KiuRcYnP7N3dc/JCzVZjpGLiiyv/kVl6bqDPnk3o51ksc0n25SrFwn85TxdIRXiBi7Mc5Tpm5CYX6F5uGP5Mo1BoMON974AK8YzRCycUpn9yHd5i9M0xO6/2xzGm9ynsSEpRrZ8Ixee4+9b+5TrqzSP96buV8ieA5eefMeMh7Re/IzleqLyGSEOkcn3iKJt+i3/qR2612GpzGlcBFPfdSBL8bG/MLtulMhfO06mQoWBLMIRXCesnZn+sxnLtkUTzww2/AxWw+8fMOJ1NUv4Lzn39lXIVOu5kAFJ7rhnK3/C07bcJ2GHOyzAAAAAElFTkSuQmCC'
 
 # If changing order, also change update_oscquery_state()
@@ -62,6 +62,7 @@ KEY_BTN_SETUP = '-BTN-SETUP-'
 KEY_BTN_TEST = '-BTN-TEST-'
 KEY_BTN_CALIBRATE = '-BTN-CALIBRATE-'
 KEY_BTN_ADD_EXTERNAL = '-BTN-ADD-EXTERNAL-'
+KEY_BTN_DEBUG = '-BTN-DEBUG-'
 KEY_BATTERY_THRESHOLD = '-BATTERY-'
 KEY_START_WITH_STEAMVR = '-START-WITH-STEAMVR-'
 KEY_AUTOSTART_STATUS_BAR = '-AUTOSTART-STATUS-BAR-'
@@ -87,6 +88,16 @@ TIMER_REFRESH_MS = 10 * 1000
 # Resaving config
 KEY_SAVE_TO_CONFIG = '-FAUX-SAVE-EVENT-'
 
+# Debug window
+KEY_DEBUG_BTN_CLEAR = '-DEBUG-BTN-CLEAR-'
+KEY_DEBUG_BTN_COPY = '-DEBUG-BTN-COPY-'
+KEY_DEBUG_BTN_REFRESH = '-DEBUG-BTN-REFRESH-'
+KEY_DEBUG_CHK_AUTOREFRESH = '-DEBUG-CHK-AUTOREFRESH-'
+KEY_DEBUG_INPUT_FILTER = '-DEBUG-INPUT-FILTER-'
+KEY_DEBUG_TBL_ADDRESS= '-DEBUG-TBL-ADDRESS-'
+KEY_DEBUG_TIMER_REFRESH = '-DEBUG-TIMER-REFRESH-'
+DEBUG_TIMER_REFRESH_MS = 0.5 * 1000
+
 # If changing this, also update app_config.py!
 DEFAULT_THEME="DarkAmber"
 
@@ -111,6 +122,7 @@ class GUIRenderer:
         self.config = app_config
         self.shutting_down = False
         self.window = None
+        self.debug_popup = None
         self.layout_dirty = False
         self.trackers = []
 
@@ -143,6 +155,8 @@ class GUIRenderer:
         # Ideally these would be updated to maintain contrast
         self.theme_color_bad = "red"
         self.theme_color_good = "lime"
+        # Help with alignment
+        small_button_size = 6
 
         self.layout = []
 
@@ -173,7 +187,7 @@ class GUIRenderer:
         # Replace with a simple Text string instead
         self.server_port_input = sg.InputText(self.config.server_port, key=KEY_REC_PORT, size=13)
         self.server_port_auto = sg.Text("[automatic]", size=13, visible=False)
-        self.server_apply_btn = sg.Button("Apply", key=KEY_BTN_APPLY, tooltip="Apply and restart server.", disabled=self.cache_server_apply_disabled)
+        self.server_apply_btn = sg.Button("Apply", key=KEY_BTN_APPLY, size=small_button_size, tooltip="Apply and restart server.", disabled=self.cache_server_apply_disabled)
 
         self.no_data_timeout = sg.Spin(
             [num for num in range(1, 601)], self.config.no_data_timeout, size=4, pad=((0,3),(0,0)),
@@ -185,8 +199,10 @@ class GUIRenderer:
             [sg.Checkbox("Start minimized", default=self.config.start_minimized, key=KEY_START_MINIMIZED, enable_events=True)],
             [sg.Text("Theme:", justification='right', size=7),
              sg.InputCombo(LIST_THEME, self.config.theme, key=KEY_THEME, readonly=True, enable_events=True, tooltip="Change app theme.\nCAUTION: Some themes are hard to read.  Be ready to reset."),
-             sg.Button("Reset", key=KEY_BTN_THEME_RESET, tooltip=f"Reset theme to default ({DEFAULT_THEME})")],
-            [sg.Text('Server settings:', font='_ 14')],
+             sg.Button("Reset", key=KEY_BTN_THEME_RESET, size=small_button_size, tooltip=f"Reset theme to default ({DEFAULT_THEME})")],
+            [sg.Text('Server settings:', font='_ 14'),
+             sg.Push(),
+             sg.Button("Debug", key=KEY_BTN_DEBUG, size=small_button_size)],
             [sg.Text("Type:", justification='right', size=7),
              sg.InputCombo(LIST_SERVER_TYPE, LIST_SERVER_TYPE[self.config.server_type], key=KEY_SERVER_TYPE, readonly=True, enable_events=True),
              sg.pin(self.server_oscquery_chkbox)],
@@ -205,7 +221,10 @@ class GUIRenderer:
              sg.Text("(seconds)")],
             # Padding from "Stop stuck haptics" checkbox removes the need for this:
             #[self.small_vertical_space()],
-            [sg.Text('Devices:', font='_ 14'), self.tracker_status_bar, sg.Push(), sg.Button("Refresh", key=KEY_BTN_REFRESH)],
+            [sg.Text('Devices:', font='_ 14'),
+             self.tracker_status_bar,
+             sg.Push(),
+             sg.Button("Refresh", key=KEY_BTN_REFRESH, size=small_button_size)],
             # add_external_button],
             [self.tracker_frame],
             [sg.HSep()],
@@ -517,6 +536,8 @@ class GUIRenderer:
             self.setup_tracker_preset(event[1])
         elif event == KEY_BTN_ADD_EXTERNAL:
             self.add_external_event(values[KEY_BTN_ADD_EXTERNAL])
+        elif event == KEY_BTN_DEBUG:
+            self.popup_debug_params()
         elif event == KEY_BTN_APPLY:
             self.restart_osc_event()
         elif event == KEY_BTN_THEME_RESET:
@@ -607,6 +628,22 @@ class GUIRenderer:
                 window.close()
                 return None
 
+    def popup_debug_params(self):
+        """GUI to pick a tracker location preset"""
+        if self.debug_popup:
+            # Don't try to open twice
+            return
+
+        self.debug_popup = DebugAddressPopup()
+        # Separate object creation from event loop so object gets assigned
+        # This is needed to pass parameters along
+        self.debug_popup.show_popup()
+        self.debug_popup = None
+
+    def debug_params_received(self, address, value):
+        if self.debug_popup:
+            self.debug_popup.params_received(address, value)
+
     def setup_tracker_preset(self, tracker_serial):
         # Find value if possible
         address_widget = (KEY_OSC_ADDRESS, tracker_serial)
@@ -694,3 +731,164 @@ class GUIRenderer:
         except ValueError:
             pass
         self.config.pattern_config_list[index].speed = int(values[key + KEY_VIB_SPEED])
+
+class DebugAddressPopup:
+    def __init__(self):
+        """GUI to show parameter addresses and values"""
+        button_size = 6
+        self.timer_active = False
+        self.param_list = {}
+        self.debug_table = sg.Table([], headings=["Address", "Value"], justification='left', key=KEY_DEBUG_TBL_ADDRESS, enable_events=True, expand_x = True, expand_y = True, col_widths=[25, 5], auto_size_columns=False, select_mode=sg.TABLE_SELECT_MODE_BROWSE)
+        # Set a specific column width to show more of address
+
+        self.debug_autorefresh_chkbox = sg.Checkbox("Auto-refresh",
+            default=True, key=KEY_DEBUG_CHK_AUTOREFRESH, enable_events=True,
+            tooltip="Automatically refresh list of addresses and values.", pad=0)
+        self.debug_filter_input = sg.InputText('haptic', key=KEY_DEBUG_INPUT_FILTER, size=25, expand_x=True)
+
+        self.debug_stats = sg.Text('Refresh to see addresses')
+
+        self.debug_copy_button = sg.Button("Copy Row", key=KEY_DEBUG_BTN_COPY, tooltip="Copy selected Address and Value to clipboard.", disabled=True)
+
+        self.debug_layout = [
+            [sg.Text("Filter:"),
+             self.debug_filter_input,
+             sg.Button("Refresh", key=KEY_DEBUG_BTN_REFRESH, size=button_size, tooltip="Refresh list of addresses and values.")],
+             [self.debug_autorefresh_chkbox,
+              sg.Push(),
+              self.debug_copy_button,
+              sg.Button("Clear", key=KEY_DEBUG_BTN_CLEAR, size=button_size, tooltip="Clear list of known addresses.")],
+            [self.debug_table],
+            [sg.HSep()],
+            [self.debug_stats,
+             sg.Push(),
+             sg.Sizegrip()],
+        ]
+
+    @property
+    def autorefresh_active(self):
+        return self.debug_autorefresh_chkbox.get()
+
+    def clear(self):
+        self.param_list = {}
+        # Preemptively clear selection too
+        self.debug_table.update(select_rows=[])
+        self.refresh()
+
+    def copy_row(self):
+        selected_rows = self.debug_table.get()
+        if not len(selected_rows):
+            return
+
+        # Get selected row text (assume first row if multiple are selected)
+        selected_row = self.debug_table.Values[selected_rows[0]]
+        print(f"[DebugAddress] Copying row to clipboard: {selected_row}")
+        # NOTE: On Linux, Tkinter requires the app to stay running to keep text
+        # Modern desktop environments resolve this with clipboard managers.
+        sg.clipboard_set(selected_row)
+
+    def params_received(self, address, value):
+        self.param_list[address] = value
+
+    def refresh(self):
+        ## Intentionally out of order to test sorting
+        #self.param_list["/avatar/parameter/TestIndex"] = 3
+        #self.param_list["/avatar/parameter/HapticChest"] = 0.3
+        #self.param_list["/avatar/parameter/HapticHips"] = 0.3567465434
+        #self.param_list["/avatar/parameter/WillGiveYouUp"] = False
+        #self.param_list["/avatar/parameter/WillLetYouDown"] = False
+        #self.param_list["/avatar/parameter/WillRunAroundAndDesertYou"] = False
+        #self.param_list["/avatar/parameter/PineappleOnPizza"] = True
+
+        filter_text = self.debug_filter_input.get().casefold()
+        # Find addresses by matching substring
+        param_list_filtered = [(k, v) for k, v in self.param_list.items() if filter_text in k.casefold()]
+        # A-Z
+        param_list_filtered.sort()
+
+        # Get selected rows
+        selected_rows = self.debug_table.get()
+        selected_addr_text = None
+        if len(selected_rows):
+            # Check first selected row
+            selected_addr_text = self.debug_table.Values[selected_rows[0]][0]
+
+        # Update
+        self.debug_table.update(param_list_filtered)
+        self.debug_stats.update(f"{len(param_list_filtered)} matching addresses, {len(self.param_list)} total")
+
+        # Restore selected rows
+        if selected_addr_text:
+            # Find new index
+            try:
+                # Find index of first matching address
+                new_row_index = [row[0] for row in self.debug_table.Values].index(selected_addr_text)
+                # Wrap in list (only a single item)
+                self.debug_table.update(select_rows=[new_row_index])
+            except ValueError:
+                # No value found
+                pass
+
+        # Refresh again if enabled
+        self.schedule_autorefresh()
+
+    def run_loop(self):
+        while True:
+            # Wait for event
+            event, values = self.window.read()
+            if event == KEY_DEBUG_BTN_CLEAR:
+                self.clear()
+                self.refresh()
+            elif event == KEY_DEBUG_BTN_COPY:
+                self.copy_row()
+            elif event == KEY_DEBUG_CHK_AUTOREFRESH:
+                if self.autorefresh_active:
+                    self.refresh()
+            elif event == KEY_DEBUG_BTN_REFRESH:
+                self.refresh()
+            elif event == KEY_DEBUG_TBL_ADDRESS:
+                self.update_select_status()
+            elif event == KEY_DEBUG_TIMER_REFRESH:
+                self.timer_active = False
+                if self.autorefresh_active:
+                    self.refresh()
+            else:
+                self.window.close()
+                return None
+
+    def schedule_autorefresh(self):
+        if self.autorefresh_active and not self.timer_active:
+            self.timer_active = True
+            self.window.timer_start(DEBUG_TIMER_REFRESH_MS, key=KEY_DEBUG_TIMER_REFRESH, repeating=False)
+
+    def show_popup(self):
+        self.window = sg.Window("Debug server input", self.debug_layout, keep_on_top=True, finalize=True, modal=True, icon=WINDOW_ICON, use_default_focus=False)
+        # Py/FreeSimpleGUI doesn't have real modal windows, so set keep_on_top
+        # to help avoid losing the dialog box.
+
+        # Center window on mouse cursor
+        loc_mid_x = self.window.size[0] / 2
+        loc_mid_y = self.window.size[1] / 2
+        mouse_loc = self.window.mouse_location()
+        self.window.move(int(mouse_loc[0] - loc_mid_x), int(mouse_loc[1] - loc_mid_y))
+        # Allow resizing
+        self.window.set_resizable(True, True)
+        # Lock in current window size as minimum
+        self.window.set_min_size(self.window.size)
+        # Expand from minimum size in X and Y direction
+        self.window.size = (self.window.size[0] + 100, self.window.size[1] + 100)
+
+        # Make it easy to clear default filter
+        self.debug_filter_input.update(select=True)
+        self.debug_filter_input.set_focus()
+
+        # Close on Escape key
+        self.window.bind("<Escape>", "-ESCAPE-")
+
+        self.schedule_autorefresh()
+
+        self.run_loop()
+
+    def update_select_status(self):
+        """Update status of Copy Row button based on row selection"""
+        self.debug_copy_button.update(disabled=not len(self.debug_table.get()))

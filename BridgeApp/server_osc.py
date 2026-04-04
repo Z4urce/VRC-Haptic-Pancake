@@ -45,11 +45,7 @@ class VRChatOSCReceiver(ServerBase):
             self.print_status("Shutdown completed.")
 
     def event_received(self, address, osc_value):
-        try:
-            float_value = float(osc_value)
-            self.param_received_event(address, float_value)
-        except ValueError:
-            pass
+        self.param_received_event(address, osc_value)
 
     def run(self):
         # Don't double-start
