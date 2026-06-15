@@ -527,6 +527,9 @@ class GUIRenderer:
             self.refresh()
             print("[GUI] Refreshing layout...")
 
+        # HACK: On Windows, the window gets stuck as keep_on_top for some reason.
+        self.window.keep_on_top_clear()
+
         # This is the main GUI loop. The code will halt here until the next event.
         event, values = self.window.read()
 
