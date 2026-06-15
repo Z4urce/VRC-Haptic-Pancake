@@ -38,6 +38,10 @@ class OpenVRHandler:
         self.devices.clear()
         for i in range(openvr.k_unMaxTrackedDeviceCount):
             if poses[i].bPoseIsValid and self.vr.getTrackedDeviceClass(i) == openvr.TrackedDeviceClass_GenericTracker:
+                if self.get_model(i).startswith("stndbl_"):
+                    # Skip Standable's simulated trackers
+                    continue
+
                 self.devices.append(VRTracker(i, self.get_model(i), self.get_serial(i)))
 
         # Start a new thread for each device
