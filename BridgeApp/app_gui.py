@@ -4,7 +4,7 @@ import webbrowser
 from app_config import AppConfig, PatternConfig
 from app_pattern import VibrationPattern
 
-WINDOW_NAME = "Haptic Pancake Bridge v0.8.0-beta.3"
+WINDOW_NAME = "Haptic Pancake Bridge v0.8.0-beta.4"
 WINDOW_ICON = b'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpVIrDhYVcchQnezgB+JYqlgEC6Wt0KqDyaVf0KQhSXFxFFwLDn4sVh1cnHV1cBUEwQ8QZwcnRRcp8X9NoUWMB8f9eHfvcfcOEOplpppdEUDVLCMZi4qZ7Kroe0UvBjEEPyYlZurx1GIaruPrHh6+3oV5lvu5P0efkjMZ4BGJI0w3LOIN4tlNS+e8TxxkRUkhPieeMOiCxI9clx1+41xossAzg0Y6OU8cJBYLHSx3MCsaKvEMcUhRNcoXMg4rnLc4q+Uqa92TvzCQ01ZSXKc5ihiWEEcCImRUUUIZFsK0aqSYSNJ+1MU/0vQnyCWTqwRGjgVUoEJq+sH/4He3Zn56ykkKRIHuF9v+GAN8u0CjZtvfx7bdOAG8z8CV1vZX6sDcJ+m1thY6Avq3gYvrtibvAZc7wPCTLhlSU/LSFPJ54P2MvikLDNwC/jWnt9Y+Th+ANHW1fAMcHALjBcped3l3T2dv/55p9fcD3S9y0apk9h0AAAAGYktHRAD/AP8A/6C9p5MAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfoCxYXCzDoJVaPAAACuElEQVQ4y2WTTW8bdRDGfzO767f1xnGcJiSNVNoKqMoJgRBCwifuIHFFuSDRTwDi2CNfgC/gGxfElV6ockEISAJBiAJ5KVnqxk7idbx+ie39DwcngaqH0Wj0HJ756ZmRjz7940Ym0nCe1DMVnArZRbn/d+85bcMJ6744GqrUzYFimIAamMF5P8GCAC1GqAMDlFk3qItKQ9WsrmaoGd32LjYeMeg0edj4mOP9Hzj4/ku2v77PJO3MtPZj1GYmYlb31c1ch2ct5uZW6XZikpN9Rr02v377BenRNsuvvkfa2sUP5wlKFbJhDy1FmAm+GpiD6XkfRFGDfD7infc/p9XcobTwGbmoRpq2sKBI8VqNXjemUCijAr6YXa2kCL74RHOrEORYufkW5vk4haJlOAQFyDLUAAeqzhBn5IOQwMsxGfUo5MqMBwm++IjLmPQTovk1PFFGyVPCygpqhphdIBiUS4t0zg5ZWrqL84RcWL2KraTgVPEWb5KmLQIvT+bsWYThIKF1+BO9XpPDg+9YufU2raPfqCy/zOnJHvlyFcmVyMhYq65h/yGAOGA64cmjBxzHW/Tbf5Ec/c5Z6xFh+RphtESvfUAn3mFh+Q5yEbuYoZc3oAbVxZc4T2KiuRcYnP7N3dc/JCzVZjpGLiiyv/kVl6bqDPnk3o51ksc0n25SrFwn85TxdIRXiBi7Mc5Tpm5CYX6F5uGP5Mo1BoMON974AK8YzRCycUpn9yHd5i9M0xO6/2xzGm9ynsSEpRrZ8Ixee4+9b+5TrqzSP96buV8ieA5eefMeMh7Re/IzleqLyGSEOkcn3iKJt+i3/qR2612GpzGlcBFPfdSBL8bG/MLtulMhfO06mQoWBLMIRXCesnZn+sxnLtkUTzww2/AxWw+8fMOJ1NUv4Lzn39lXIVOu5kAFJ7rhnK3/C07bcJ2GHOyzAAAAAElFTkSuQmCC'
 
 # If changing order, also change update_oscquery_state()
@@ -118,6 +118,10 @@ class GUIRenderer:
         self.cache_osc_status_bar_text = 'Loading...'
         self.cache_osc_status_bar_color = None
         self.cache_server_apply_disabled = True
+        # HACK: Another fun bug - sometimes the initialization order means that
+        # the status text simply doesn't get set!  Do a one-time force refresh
+        # to work around this.
+        self.cache_force_refresh = True
 
         self.config = app_config
         self.shutting_down = False
@@ -232,6 +236,10 @@ class GUIRenderer:
              sg.Text("Enjoy Haptic Pancake?  Consider donating", enable_events=True, font='Default 8 underline', key=KEY_OPEN_URL_DONATE),
              sg.Sizegrip()],
         ]
+
+        # HACK: Force a refresh of the OSC status bar after reloading, just in
+        # case the wrong details get shown.
+        self.cache_force_refresh = True
 
     @staticmethod
     def build_pattern_setting_layout(key: str, pattern_list: [str], pattern_config: PatternConfig):
@@ -519,6 +527,9 @@ class GUIRenderer:
             self.refresh()
             print("[GUI] Refreshing layout...")
 
+        # HACK: On Windows, the window gets stuck as keep_on_top for some reason.
+        self.window.keep_on_top_clear()
+
         # This is the main GUI loop. The code will halt here until the next event.
         event, values = self.window.read()
 
@@ -552,7 +563,15 @@ class GUIRenderer:
         elif event == KEY_OPEN_URL_DONATE:
             webbrowser.open("https://hapticpancake.com/donate")
         elif event == KEY_TIMER_REFRESH:
-            # Quietly refresh on timer elapse
+            if self.cache_force_refresh:
+                print("[GUI] Forcing refresh of OSC status bar")
+                # HACK: Work around status bar getting stuck on some setups
+                cache_error = False
+                if self.cache_osc_status_bar_color == self.theme_color_bad:
+                    cache_error = True
+                self.update_osc_status_bar(self.cache_osc_status_bar_text, cache_error, self.cache_server_apply_disabled)
+                self.cache_force_refresh = False
+            ## Quietly refresh on timer elapse
             self.refresh_vr_event(quiet_refresh=True)
             self.window.timer_start(TIMER_REFRESH_MS, key=KEY_TIMER_REFRESH, repeating=False)
 
