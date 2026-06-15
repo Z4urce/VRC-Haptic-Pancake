@@ -118,6 +118,10 @@ class GUIRenderer:
         self.cache_osc_status_bar_text = 'Loading...'
         self.cache_osc_status_bar_color = None
         self.cache_server_apply_disabled = True
+        # HACK: Another fun bug - sometimes the initialization order means that
+        # the status text simply doesn't get set!  Do a one-time force refresh
+        # to work around this.
+        self.cache_force_refresh = True
 
         self.config = app_config
         self.shutting_down = False
@@ -232,6 +236,10 @@ class GUIRenderer:
              sg.Text("Enjoy Haptic Pancake?  Consider donating", enable_events=True, font='Default 8 underline', key=KEY_OPEN_URL_DONATE),
              sg.Sizegrip()],
         ]
+
+        # HACK: Force a refresh of the OSC status bar after reloading, just in
+        # case the wrong details get shown.
+        self.cache_force_refresh = True
 
     @staticmethod
     def build_pattern_setting_layout(key: str, pattern_list: [str], pattern_config: PatternConfig):
@@ -552,7 +560,15 @@ class GUIRenderer:
         elif event == KEY_OPEN_URL_DONATE:
             webbrowser.open("https://hapticpancake.com/donate")
         elif event == KEY_TIMER_REFRESH:
-            # Quietly refresh on timer elapse
+            if self.cache_force_refresh:
+                print("[GUI] Forcing refresh of OSC status bar")
+                # HACK: Work around status bar getting stuck on some setups
+                cache_error = False
+                if self.cache_osc_status_bar_color == self.theme_color_bad:
+                    cache_error = True
+                self.update_osc_status_bar(self.cache_osc_status_bar_text, cache_error, self.cache_server_apply_disabled)
+                self.cache_force_refresh = False
+            ## Quietly refresh on timer elapse
             self.refresh_vr_event(quiet_refresh=True)
             self.window.timer_start(TIMER_REFRESH_MS, key=KEY_TIMER_REFRESH, repeating=False)
 
