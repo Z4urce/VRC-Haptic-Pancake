@@ -110,7 +110,7 @@ def refresh_autostart_status(quiet_refresh=False):
             gui.update_autostart_active(config.start_with_steamvr)
 
     # Always update VR runtime status
-    gui.update_autostart_status(vr.is_alive, vr.is_app_bundled)
+    gui.update_autostart_status(vr.is_alive)
 
 
 def add_external_target(external_type):
