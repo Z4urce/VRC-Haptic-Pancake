@@ -35,11 +35,6 @@ class VRManifest():
         return self.vrmanifest_app_key
 
     @property
-    def is_app_bundled(self):
-        """Gets if the app can be easily launched, e.g. as a PyInstaller bundle"""
-        return getattr(sys, 'frozen', False)
-
-    @property
     def is_recent(self):
         """Gets if VR manifest file has been saved this launch"""
         return self.vrmanifest_recent
@@ -67,7 +62,7 @@ class VRManifest():
             binary_path_type = "binary_path_windows"
 
         launch_path = self.app_path
-        if not self.is_app_bundled:
+        if not platform_conf.GET_IS_APP_BUNDLED():
             launch_path = self.devlauncher_path
 
         self.vrmanifest_data = {
@@ -92,7 +87,7 @@ class VRManifest():
 
     def save_devlauncher(self):
         """Saves a dev-mode/unbundled launch script based on path"""
-        if self.is_app_bundled:
+        if platform_conf.GET_IS_APP_BUNDLED():
             print(f"[VRManifest] Not saving dev-mode launch script, app is bundled")
             return
 
@@ -149,7 +144,7 @@ class VRManifest():
             json.dump(self.vrmanifest_data, mvr_file, ensure_ascii=False, sort_keys=True, indent=4)
 
         # Save dev launcher if needed
-        if not self.is_app_bundled:
+        if not platform_conf.GET_IS_APP_BUNDLED():
             self.save_devlauncher()
 
         self.vrmanifest_recent = True
